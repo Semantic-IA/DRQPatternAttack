@@ -17,6 +17,10 @@ DRQPatternAttack is a simulator for the Pattern Attack on DNS Range Queries, as 
 
 import sys
 import os
+from var import Config  # Config Variables
+import parse.Pattern    # Parser for pattern file
+import generate.DRQ     # DNS Range Query generator
+import attacker.Pattern # Attacker
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
@@ -53,45 +57,25 @@ def main(argv=None): # IGNORE:C0111
     program_build_date = str(__updated__)
     program_version_message = '%%(prog)s %s (%s)' % (program_version, program_build_date)
     program_shortdesc = __import__('__main__').__doc__.split("\n")[1]
-    program_license = '''%s
-
-  Created by Max Maass on %s.
-  
-USAGE
-''' % (program_shortdesc, str(__date__))
+    program_license = '''''' # % (program_shortdesc, str(__date__))
 
     try:
         # Setup argument parser
         parser = ArgumentParser(description=program_license, formatter_class=RawDescriptionHelpFormatter)
-        parser.add_argument("-r", "--recursive", dest="recurse", action="store_true", help="recurse into subfolders [default: %(default)s]")
-        parser.add_argument("-v", "--verbose", dest="verbose", action="count", help="set verbosity level [default: %(default)s]")
-        parser.add_argument("-i", "--include", dest="include", help="only include paths matching this regex pattern. Note: exclude is given preference over include. [default: %(default)s]", metavar="RE" )
-        parser.add_argument("-e", "--exclude", dest="exclude", help="exclude paths matching this regex pattern. [default: %(default)s]", metavar="RE" )
-        parser.add_argument('-V', '--version', action='version', version=program_version_message)
-        parser.add_argument(dest="paths", help="paths to folder(s) with source file(s) [default: %(default)s]", metavar="path", nargs='+')
+        group = parser.add_mutually_exclusive_group()
+        group.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="Enable verbose output (show more Information)")
+        group.add_argument("-q", "--quiet", dest="quiet", action="store_true", help="Enable quiet mode (only show most likely result)")
+        parser.add_argument('--version', action='version', version=program_version_message)
+        parser.add_argument("file", help="Select pattern file. [default: %(default)s]", default="./patterns.txt")
         
         # Process arguments
         args = parser.parse_args()
+        Config.VERBOSE = args.verbose
+        Config.QUIET = args.quiet
+        Config.INFILE = args.file
         
-        paths = args.paths
-        verbose = args.verbose
-        recurse = args.recurse
-        inpat = args.include
-        expat = args.exclude
+        parse.Pattern.parse()
         
-        if verbose > 0:
-            print("Verbose mode on")
-            if recurse:
-                print("Recursive mode on")
-            else:
-                print("Recursive mode off")
-        
-        if inpat and expat and inpat == expat:
-            raise CLIError("include and exclude pattern are equal! Nothing will be processed.")
-        
-        for inpath in paths:
-            ### do something with inpath ###
-            print(inpath)
         return 0
     except KeyboardInterrupt:
         ### handle keyboard interrupt ###
@@ -106,9 +90,7 @@ USAGE
 
 if __name__ == "__main__":
     if DEBUG:
-        sys.argv.append("-h")
         sys.argv.append("-v")
-        sys.argv.append("-r")
     if TESTRUN:
         import doctest
         doctest.testmod()
