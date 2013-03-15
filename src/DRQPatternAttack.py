@@ -66,6 +66,7 @@ def main(argv=None): # IGNORE:C0111
         group.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="Enable verbose output (show more Information)")
         group.add_argument("-q", "--quiet", dest="quiet", action="store_true", help="Enable quiet mode (only show most likely result)")
         parser.add_argument('--version', action='version', version=program_version_message)
+        parser.add_argument('-s', '--size', dest="size", help="Size of the range query [default %(default)s]", default="50", type=int)
         parser.add_argument("file", help="Select pattern file. [default: %(default)s]", default="./patterns.txt")
         
         # Process arguments
@@ -89,8 +90,6 @@ def main(argv=None): # IGNORE:C0111
         return 2
 
 if __name__ == "__main__":
-    if DEBUG:
-        sys.argv.append("-v")
     if TESTRUN:
         import doctest
         doctest.testmod()

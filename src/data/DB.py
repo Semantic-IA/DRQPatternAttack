@@ -5,3 +5,9 @@ Holds the Data parsed from the pattern file for use in other modules
 '''
 PATTERNS = {}
 QUERIES = set()
+
+def chooseRandomTarget():
+    pass
+
+def chooseRandomHost():
+    pass
