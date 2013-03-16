@@ -26,11 +26,11 @@ from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
 __all__ = []
-__version__ = 0.1
+__version__ = 0.2
 __date__ = '2013-03-15'
 __updated__ = '2013-03-15'
 
-DEBUG = 1
+DEBUG = 0
 TESTRUN = 0
 PROFILE = 0
 
@@ -63,11 +63,11 @@ def main(argv=None): # IGNORE:C0111
         # Setup argument parser
         parser = ArgumentParser(description=program_license, formatter_class=RawDescriptionHelpFormatter)
         group = parser.add_mutually_exclusive_group()
-        group.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="Enable verbose output (show more Information)")
-        group.add_argument("-q", "--quiet", dest="quiet", action="store_true", help="Enable quiet mode (only show most likely result)")
+        group.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="enable verbose output (show more information)")
+        group.add_argument("-q", "--quiet", dest="quiet", action="store_true", help="enable quiet mode (only show most likely result)")
         parser.add_argument('--version', action='version', version=program_version_message)
-        parser.add_argument('-s', '--size', dest="size", help="Size of the range query [default %(default)s]", default="50", type=int)
-        parser.add_argument("file", help="Select pattern file. [default: %(default)s]", default="./patterns.txt")
+        parser.add_argument('-s', '--size', dest="size", help="size of the range query [default %(default)s]", default="50", type=int)
+        parser.add_argument("file", help="select pattern file. [default: %(default)s]", default="./patterns.txt")
         
         # Process arguments
         args = parser.parse_args()
