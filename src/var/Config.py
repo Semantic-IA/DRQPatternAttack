@@ -6,4 +6,4 @@ Holds configuration variables
 QUIET = False       # Quiet mode enabled?
 VERBOSE = False     # Verbose mode enabled?
 INFILE = ""         # Path to pattern file
-RQSIZE = 50         # Range Query Size (Number of Queries per Range Query block)
+RQSIZE = 0         # Range Query Size (Number of Queries per Range Query block)

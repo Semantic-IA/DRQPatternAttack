@@ -66,7 +66,7 @@ def main(argv=None): # IGNORE:C0111
         group.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="enable verbose output (show more information)")
         group.add_argument("-q", "--quiet", dest="quiet", action="store_true", help="enable quiet mode (only show most likely result)")
         parser.add_argument('--version', action='version', version=program_version_message)
-        parser.add_argument('-s', '--size', dest="size", help="size of the range query [default %(default)s]", default="50", type=int)
+        parser.add_argument('-s', '--size', dest="rqsize", help="size of the range query [default %(default)s]", default="50", type=int)
         parser.add_argument("file", help="select pattern file. [default: %(default)s]", default="./patterns.txt")
         
         # Process arguments
@@ -74,8 +74,10 @@ def main(argv=None): # IGNORE:C0111
         Config.VERBOSE = args.verbose
         Config.QUIET = args.quiet
         Config.INFILE = args.file
+        Config.RQSIZE = args.rqsize
         
         parse.Pattern.parse()
+        
         
         return 0
     except KeyboardInterrupt:

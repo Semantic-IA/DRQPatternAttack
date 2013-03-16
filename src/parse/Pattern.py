@@ -19,10 +19,13 @@ def parse():
         stdout.write("PARSER: Beginning parsing of pattern file... ")
         stdout.flush()
     for line in open(Config.INFILE, 'r'):               # Open the file for reading
+        line = line.strip()                             # Remove trailing newlines
         target = line[:line.find(":")]                  # Find the target
         queries = line[line.find(":")+1:].split(",")    # Find the queries
         DB.PATTERNS[target] = queries                   # Add target and queries...
         for element in queries:                         # ...to both datasets in the DB
+            if (element.find(":") > 0):
+                element = element[:element.find(":")]
             DB.QUERIES.add(element)
     if(Config.VERBOSE):                                 # In case of verbose output, give some stats
         print "Done"
