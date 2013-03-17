@@ -63,18 +63,18 @@ def main(argv=None): # IGNORE:C0111
         # Setup argument parser
         parser = ArgumentParser(description=program_license, formatter_class=RawDescriptionHelpFormatter)
         group = parser.add_mutually_exclusive_group()
-        group.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="enable verbose output (show more information)")
+        group.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="enable verbose output (show more information). Verbose Information will be marked with a [V] in the output")
         group.add_argument("-q", "--quiet", dest="quiet", action="store_true", help="enable quiet mode (only show most likely result)")
         parser.add_argument('--version', action='version', version=program_version_message)
-        parser.add_argument('-s', '--size', dest="rqsize", help="size of the range query [default %(default)s]", default="50", type=int)
-        parser.add_argument("file", help="select pattern file. [default: %(default)s]", default="./patterns.txt")
+        parser.add_argument('-s', '--size', dest="num", help="size of the range query [default %(default)s]", default="50", type=int)
+        parser.add_argument("file", help="select pattern file.")
         
         # Process arguments
         args = parser.parse_args()
         Config.VERBOSE = args.verbose
         Config.QUIET = args.quiet
         Config.INFILE = args.file
-        Config.RQSIZE = args.rqsize
+        Config.RQSIZE = args.num
         
         parse.Pattern.parse()
         
@@ -82,7 +82,7 @@ def main(argv=None): # IGNORE:C0111
         return 0
     except KeyboardInterrupt:
         ### handle keyboard interrupt ###
-        return 0
+        return 1
     except Exception, e:
         if DEBUG or TESTRUN:
             raise(e)
