@@ -15,8 +15,9 @@ def parse():
     target.tld:query1.tld,query2.tld,query3.tld,...
     """
     # @TODO: Add verification of file format, plus exception in case of violation
-    stdout.write("Beginning parsing of pattern file... ")
-    stdout.flush()
+    if not Config.QUIET:
+        stdout.write("Beginning parsing of pattern file... ")
+        stdout.flush()
     for line in open(Config.INFILE, 'r'):               # Open the file for reading
         line = line.strip()                             # Remove trailing newlines
         target = line[:line.find(":")]                  # Find the target
@@ -27,7 +28,8 @@ def parse():
                 element = element[:element.find(":")]   # Remove Port information, if any
             DB.QUERIES.add(element)                     # Add to set of all hostnames
             DB.PATTERNS[target].append(element)         # Add to current pattern
-    print "Done"
+    if not Config.QUIET:
+        print "Done"
     if(Config.VERBOSE):                                 # In case of verbose output, give some stats
         print "[V] Added " + str(len(DB.PATTERNS)) + " patterns."
         print "[V] " + str(len(DB.QUERIES)) + " Hostnames in Dataset."

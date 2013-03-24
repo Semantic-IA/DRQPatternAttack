@@ -21,6 +21,7 @@ from var import Config  # Config Variables
 import parse.Pattern    # Parser for pattern file
 import generate.DRQ     # DNS Range Query generator
 import attacker.Pattern # Attacker
+import data.DB          # Database # TODO: Remove (debug import)
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
@@ -67,6 +68,8 @@ def main(argv=None): # IGNORE:C0111
         group.add_argument("-q", "--quiet", dest="quiet", action="store_true", help="enable quiet mode (only show most likely result)")
         parser.add_argument('--version', action='version', version=program_version_message)
         parser.add_argument('-s', '--size', dest="num", help="size of the range query [default %(default)s]", default="50", type=int)
+        parser.add_argument('-c', '--count', dest="cnt", help="Number of random targets to be tried [default %(default)s]", default="50", type=int)
+        parser.add_argument('--stat', dest="stat", help="Show stats", action="store_true")
         parser.add_argument("file", help="select pattern file.")
         
         # Process arguments
@@ -75,9 +78,40 @@ def main(argv=None): # IGNORE:C0111
         Config.QUIET = args.quiet
         Config.INFILE = args.file
         Config.RQSIZE = args.num
-        
+        Config.STAT = args.stat
+        stat = {}
         parse.Pattern.parse()
-        
+        for i in range(args.cnt):
+            t = data.DB.chooseRandomTarget()
+            pat = generate.DRQ.generateDRQFor(t)
+            at = attacker.Pattern.patternV1()
+            res = at.attack(pat)
+            lr = len(res)
+            lp = len(data.DB.PATTERNS[t])
+            if not Config.QUIET:
+                print "Target: " + t
+                #print "Possible targets: " + str(res)
+                print "# possible targets: " + str(lr)
+                print "Correct target in list: " + str(t in res)
+                if t not in res:
+                    print "------ WTF ------"
+                if Config.VERBOSE:
+                    print "[V] Length of target pattern: " + str(lp)
+            if Config.VERBOSE or Config.STAT:
+                if lp in stat:
+                    if lr in stat[lp]:
+                        stat[lp][lr] += 1
+                    else:
+                        stat[lp][lr] = 1
+                else:
+                    stat[lp] = {}
+                    stat[lp][lr] = 1
+            if not Config.QUIET:
+                print "================================="
+        if Config.VERBOSE or Config.STAT:
+            for okey in stat:
+                for ikey in stat[okey]:
+                    print str(okey) + ":" + str(ikey) + ":" + str(stat[okey][ikey])
         
         return 0
     except KeyboardInterrupt:
