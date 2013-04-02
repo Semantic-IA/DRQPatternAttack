@@ -22,4 +22,22 @@ class patternV1():
             if len(inter) == len(DB.PATTERNS[key]) and not len(rq) % len(inter):
                 res.append(key)
         return res
-                
+    
+class DFBPattern():
+    """Distinguishable First Block Pattern Attack"""
+    
+    def attack(self,fb,rq):
+        """Attack a given Range  Query with a distinguishable first block
+        
+        @param fb: The first block, as set
+        @param rq: The remaining range query, as set
+        """
+        res = []
+        rq.update(fb)
+        for key in DB.PATTERNS.keys():
+            if key in fb:
+                if DB.PATTERNS[key] <= rq:
+                    res.append(key)
+        return res
+# Unterscheidbare Blöcke
+# Erster Block unterscheidbar

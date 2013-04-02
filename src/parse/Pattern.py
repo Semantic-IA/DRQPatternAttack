@@ -22,12 +22,12 @@ def parse():
         line = line.strip()                             # Remove trailing newlines
         target = line[:line.find(":")]                  # Find the target
         queries = line[line.find(":")+1:].split(",")    # Find the queries
-        DB.PATTERNS[target] = []                        # Add target and queries...
+        DB.PATTERNS[target] = set()                     # Add target and queries...
         for element in queries:                         # ...to both datasets in the DB
             if (element.find(":") > 0):
                 element = element[:element.find(":")]   # Remove Port information, if any
             DB.QUERIES.add(element)                     # Add to set of all hostnames
-            DB.PATTERNS[target].append(element)         # Add to current pattern
+            DB.PATTERNS[target].add(element)            # Add to current pattern
     if not Config.QUIET:
         print "Done"
     if(Config.VERBOSE):                                 # In case of verbose output, give some stats
