@@ -9,7 +9,7 @@ DRQPatternAttack is a simulator for the Pattern Attack on DNS Range Queries, as 
         
 @copyright:  2013 Max Maass
         
-@license:    Herp Derp License v1.337
+@license:    To be determined
 
 @contact:    0maass@informatik.uni-hamburg.de
 @deffield    updated: Updated
