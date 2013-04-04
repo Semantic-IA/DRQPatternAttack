@@ -83,9 +83,9 @@ def main(argv=None): # IGNORE:C0111
         parse.Pattern.parse()
         for i in range(args.cnt):
             t = data.DB.chooseRandomTarget()
-            pat = generate.DRQ.generateDRQFor(t)
-            at = attacker.Pattern.patternV1()
-            res = at.attack(pat)
+            head, block = generate.DRQ.generateDDRQFor(t)
+            at = attacker.Pattern.DFBPattern()
+            res = at.attack(head, block)
             lr = len(res)
             lp = len(data.DB.PATTERNS[t])
             if not Config.QUIET:

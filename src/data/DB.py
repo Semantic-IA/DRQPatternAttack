@@ -6,7 +6,7 @@ Holds the Data parsed from the pattern file for use in other modules
 from random import choice, sample
 PATTERNS = {}
 QUERIES = set()
-
+# TODO: Verify that chooseRandom{Target,Hosts} works on Sets
 def chooseRandomTarget():
     return choice(PATTERNS.keys())
 
