@@ -71,6 +71,7 @@ def main(argv=None): # IGNORE:C0111
         parser.add_argument('-c', '--count', dest="cnt", help="Number of random targets to be tried [default %(default)s]", default="50", type=int)
         parser.add_argument('--stat', dest="stat", help="Show stats", action="store_true")
         parser.add_argument("file", help="select pattern file.")
+        # TODO: Add Arguments to determine the used combination of generator and attacker
         
         # Process arguments
         args = parser.parse_args()
@@ -79,6 +80,10 @@ def main(argv=None): # IGNORE:C0111
         Config.INFILE = args.file
         Config.RQSIZE = args.num
         Config.STAT = args.stat
+        
+        # Starting here: Debug code. For the final version, this should be cleaned up and refactored into
+        # modules and functions.
+        # TODO: implement usage of planned parameters determining combination of generator and attacker
         stat = {}
         parse.Pattern.parse()
         for i in range(args.cnt):
