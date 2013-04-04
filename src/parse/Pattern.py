@@ -13,8 +13,10 @@ def parse():
     """Parses the INFILE
     INFILE is expected to have a format of:
     target.tld:query1.tld,query2.tld,query3.tld,...
+    
+    No parameters or return values, all info is read from the config and written to the database.
     """
-    # @TODO: Add verification of file format, plus exception in case of violation
+    # TODO: Add verification of file format, plus exception in case of violation
     if not Config.QUIET:
         stdout.write("Beginning parsing of pattern file... ")
         stdout.flush()
@@ -22,15 +24,15 @@ def parse():
         line = line.strip()                             # Remove trailing newlines
         target = line[:line.find(":")]                  # Find the target
         queries = line[line.find(":")+1:].split(",")    # Find the queries
-        DB.PATTERNS[target] = []                        # Add target and queries...
+        DB.PATTERNS[target] = set()                     # Add target and queries...
         for element in queries:                         # ...to both datasets in the DB
             if (element.find(":") > 0):
                 element = element[:element.find(":")]   # Remove Port information, if any
             DB.QUERIES.add(element)                     # Add to set of all hostnames
-            DB.PATTERNS[target].append(element)         # Add to current pattern
+            DB.PATTERNS[target].add(element)            # Add to current pattern
     if not Config.QUIET:
         print "Done"
-    if(Config.VERBOSE):                                 # In case of verbose output, give some stats
+    if(Config.VERBOSE):                                 # In case of verbose output, output some stats
         print "[V] Added " + str(len(DB.PATTERNS)) + " patterns."
         print "[V] " + str(len(DB.QUERIES)) + " Hostnames in Dataset."
         print "[V] That is an average of " + str(float(len(DB.QUERIES)) / len(DB.PATTERNS)) + " Queries per Pattern"

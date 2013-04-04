@@ -27,9 +27,9 @@ from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
 __all__ = []
-__version__ = 0.2
+__version__ = '0.2.1'
 __date__ = '2013-03-15'
-__updated__ = '2013-03-15'
+__updated__ = '2013-04-04'
 
 DEBUG = 0
 TESTRUN = 0
@@ -71,6 +71,7 @@ def main(argv=None): # IGNORE:C0111
         parser.add_argument('-c', '--count', dest="cnt", help="Number of random targets to be tried [default %(default)s]", default="50", type=int)
         parser.add_argument('--stat', dest="stat", help="Show stats", action="store_true")
         parser.add_argument("file", help="select pattern file.")
+        # TODO: Add Arguments to determine the used combination of generator and attacker
         
         # Process arguments
         args = parser.parse_args()
@@ -79,13 +80,17 @@ def main(argv=None): # IGNORE:C0111
         Config.INFILE = args.file
         Config.RQSIZE = args.num
         Config.STAT = args.stat
+        
+        # Starting here: Debug code. For the final version, this should be cleaned up and refactored into
+        # modules and functions.
+        # TODO: implement usage of planned parameters determining combination of generator and attacker
         stat = {}
         parse.Pattern.parse()
         for i in range(args.cnt):
             t = data.DB.chooseRandomTarget()
-            pat = generate.DRQ.generateDRQFor(t)
-            at = attacker.Pattern.patternV1()
-            res = at.attack(pat)
+            head, block = generate.DRQ.generateDDRQFor(t)
+            at = attacker.Pattern.DFBPattern()
+            res = at.attack(head, block)
             lr = len(res)
             lp = len(data.DB.PATTERNS[t])
             if not Config.QUIET:
