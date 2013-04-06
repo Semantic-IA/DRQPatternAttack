@@ -11,7 +11,7 @@ DRQPatternAttack is a simulator for the Pattern Attack on DNS Range Queries, as 
         
 @license:    To be determined
 
-@contact:    0maass@informatik.uni-hamburg.de
+@contact:    0maass@informatik.uni-hamburg.de (PGP Key ID: 6F3891FC, Fingerprint 146D 278F F603 D22F 8906  373C 3C58 CF40 6F38 91FC)
 @deffield    updated: Updated
 '''
 
