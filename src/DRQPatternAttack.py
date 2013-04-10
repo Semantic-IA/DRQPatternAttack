@@ -31,10 +31,6 @@ __version__ = '0.2.1'
 __date__ = '2013-03-15'
 __updated__ = '2013-04-04'
 
-DEBUG = 0
-TESTRUN = 0
-PROFILE = 0
-
 class CLIError(Exception):
     '''Generic exception to raise and log different fatal errors.'''
     def __init__(self, msg):
@@ -123,26 +119,10 @@ def main(argv=None): # IGNORE:C0111
         ### handle keyboard interrupt ###
         return 1
     except Exception, e:
-        if DEBUG or TESTRUN:
-            raise(e)
         indent = len(program_name) * " "
         sys.stderr.write(program_name + ": " + repr(e) + "\n")
         sys.stderr.write(indent + "  for help use --help")
         return 2
 
 if __name__ == "__main__":
-    if TESTRUN:
-        import doctest
-        doctest.testmod()
-    if PROFILE:
-        import cProfile
-        import pstats
-        profile_filename = 'DRQPatternAttack_profile.txt'
-        cProfile.run('main()', profile_filename)
-        statsfile = open("profile_stats.txt", "wb")
-        p = pstats.Stats(profile_filename, stream=statsfile)
-        stats = p.strip_dirs().sort_stats('cumulative')
-        stats.print_stats()
-        statsfile.close()
-        sys.exit(0)
     sys.exit(main())
