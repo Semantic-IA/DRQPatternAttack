@@ -16,7 +16,8 @@ def parse():
     
     No parameters or return values, all info is read from the config and written to the database.
     """
-    # TODO: Add verification of file format, plus exception in case of violation
+    # FIXME: Add verification of file format, plus exception in case of violation
+    # TODO: Also create a dictionary to list all patterns by length, for the pattern-based DRQ Generator
     if not Config.QUIET:
         stdout.write("Beginning parsing of pattern file... ")
         stdout.flush()

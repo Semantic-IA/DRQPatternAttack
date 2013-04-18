@@ -68,6 +68,7 @@ def main(argv=None): # IGNORE:C0111
         parser.add_argument('--stat', dest="stat", help="Show stats", action="store_true")
         parser.add_argument("file", help="select pattern file.")
         # TODO: Add Arguments to determine the used combination of generator and attacker
+        # TODO: Add Argument for interactive mode and document it in the help
         
         # Process arguments
         args = parser.parse_args()
@@ -77,14 +78,18 @@ def main(argv=None): # IGNORE:C0111
         Config.RQSIZE = args.num
         Config.STAT = args.stat
         
-        # Starting here: Debug code. For the final version, this should be cleaned up and refactored into
-        # modules and functions.
-        # TODO: implement usage of planned parameters determining combination of generator and attacker
+        # Starting here: Debug and testing code. For the final version, this should be cleaned up and
+        # refactored into modules and functions.
+        # TODO: Implement usage of planned parameters determining combination of generator and attacker
+        # TODO: Add a dictionary mapping parameters to generators and attackers
+        # TODO: Add a compatibility Database for these parameters
+        # TODO: Refactor this to be modular with good documentation and less horrible code
+        # TODO: Add interactive mode as per the parameter proposed above
         stat = {}
         parse.Pattern.parse()
         for i in range(args.cnt):
             t = data.DB.chooseRandomTarget()
-            head, block = generate.DRQ.generateDDRQFor(t)
+            head, block = generate.DRQ.DFBRQ().generateDRQFor(t)
             at = attacker.Pattern.DFBPattern()
             res = at.attack(head, block)
             lr = len(res)
@@ -93,9 +98,8 @@ def main(argv=None): # IGNORE:C0111
                 print "Target: " + t
                 #print "Possible targets: " + str(res)
                 print "# possible targets: " + str(lr)
-                print "Correct target in list: " + str(t in res)
                 if t not in res:
-                    print "------ WTF ------"
+                    print "[!!!] Target not in result!"
                 if Config.VERBOSE:
                     print "[V] Length of target pattern: " + str(lp)
             if Config.VERBOSE or Config.STAT:
