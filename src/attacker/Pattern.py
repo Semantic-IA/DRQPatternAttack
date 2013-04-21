@@ -4,9 +4,13 @@ Main Attacker Module
 Implements different versions of the Attack. See Class Documentations for further information.
 
 Each class provides at least one function, 'attack', which is used to run a simulated attack on the provided data.
+The attack functions take different inputs, but will always return a list of possible results.
 
 @author: Max Maass
 '''
+
+# TODO: Idea: Restructure this into classes to mirror the classes of the generators.
+# TODO: Check: Mathing naming conventions for generators and attackers
 from data import DB
 def intersection(a, b):
     return list(set(a) & set(b))
@@ -57,5 +61,33 @@ class DFBPattern():
                     res.append(key)
         return res
 
-### Moegliche weitere Annahmen:
-# Komplett unterscheidbare Bloecke
+class FDBPattern():
+    """Fully distinguishable Blocks pattern Attack
+    
+    This attack assumes that all blocks are distinguishable. Each block contains exactly one part of the pattern.
+    Depending on the implementation of the real life DRQ generator, this might be a valid assumption, but if some care
+    is taken it should NOT be possible to distinguish the blocks (apart from the first block, which is pretty much
+    unavoidable)
+    """
+    
+    def attack(self,blocklist):
+        """Attack a given range query with fully distinguishable blocks
+        
+        @param blocklist: A list of sets, each set representing a block, the main target in the first block.
+        @return: List of possible results
+        """
+        res = []
+        for key in DB.SIZES[len(blocklist)]:
+            if key in blocklist[0]:
+                tmp = blocklist[1:]
+                cnt = {}
+                for i in range(len(blocklist)-1):
+                    cnt[i] = 0
+                for query in DB.PATTERNS[key]:
+                    if query != key:
+                        for i in range(len(tmp)):
+                            if query in tmp[i]:
+                                cnt[i] += 1
+                if not 0 in cnt.values():
+                    res.append(key)
+        return res

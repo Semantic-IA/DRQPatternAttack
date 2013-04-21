@@ -7,11 +7,11 @@ results in different formats.
 
 @author: Max Maass
 '''
+from random import shuffle
 from data import DB
 from var import Config
-# TODO: Add @note: Compatible with ... to all functions.
-class UBRQ():
-    """Undistinguishable Blocks Range Query"""
+class NDBRQ():
+    """No distinguishable Blocks Range Query"""
     
     def generateDRQFor(self,domain):
         """Generate a Range Query for a given domain name.
@@ -23,7 +23,7 @@ class UBRQ():
         
         @param domain: The domain name for which a range query should be constructed
         @return: A set of queries
-        @note: Compatible with [...]
+        @note: Compatible with NDBPattern
         """
         # TODO: Idea: Add boolean parameter which would guarantee len(query) % Config.RQSIZE == 0?
         query = []
@@ -45,7 +45,7 @@ class DFBRQ():
         @param domain: The domain name for which a range query should be constructed
         @return: A tuple of two sets, the first containing the first query block, the second containing the remaining 
             queries
-        @note: Compatible with [...]
+        @note: Compatible with DFBPattern
         """
         # TODO: Add boolean parameter which would guarantee len(query) % Config.RQSIZE == 0?
         head = set()    # First Set of Queries
@@ -64,26 +64,39 @@ class FDBRQ():
         """Generate a Range Query with fully distinguishable blocks, meaning that each block contains exactly one
         element of the pattern, and len(list_of_blocks) == len(pattern).
         
-        Returned hostnames are unique [in a fashion to be decided, see TODO below].
+        Returned hostnames are unique within their respective blocks, but not guaranteed to be unique across multiple
+        blocks.
         
         @param domain: The domain name for which a range query should be constructed
         @return: A list of sets, each set representing a query block with one element from the pattern and at most
             Config.RQSIZE-1 randomly chosen hosts (sometimes less due to the nature of the random choice function
-            and the set data type eleminating duplicates).
-        @note: Compatible with [...]
+            and the set data type eleminating duplicates). The target is guaranteed to be contained in the first
+            block, the other blocks can be in any order.
+        @note: Compatible with FDBPattern
         """
-        # TODO: Decide: Which uniqueness method should be used: Unique inside blocks, unique across all blocks?
-        # TODO: Decide: Blocks in Order? First block in order, remaining blocks in random order? Add. Parameter?
-        pass
+        head = [set()]
+        query = []
+        head[0].add(domain)
+        head[0].update(DB.chooseRandomHosts(Config.RQSIZE-1))
+        for subquery in DB.PATTERNS[domain]:
+            if subquery != domain:
+                block = set()
+                block.add(subquery)
+                block.update(DB.chooseRandomHosts(Config.RQSIZE-1))
+                query.append(block)
+        shuffle(query)
+        head += query
+        return head
 
 class PBRQ():
     """Pattern-based range query"""
-    # TODO: Consider: All implemented methods could be re-implemented with pattern-based generation
-    #     Pos. Solution: Subclasses?
     # TODO: Idea: Pad using multiple patterns that sum into the correct amount (Problem: Choice btw. alternatives)
     #     If used: For written part, consider timing problems using this method
-    class UBRQ():
-        """Undistinguishable blocks range query"""
+    # TODO: Idea: Add more blocks that are not relevant to the "real" query.
+    #     Meaning: Pattern length 6 -> 8 Blocks, add another Pattern with a length of 2 to continue orig. Pattern.
+    #     Return Blocks in steps of N Blocks for obfuscation.
+    class NDBRQ():
+        """No distinguishable blocks range query"""
         def generateDRQFor(self,domain):
             """Generate a Range Query for a given domain name.
     
@@ -94,7 +107,7 @@ class PBRQ():
             
             @param domain: The domain name for which a range query should be constructed
             @return: A set of queries
-            @note: Compatible with [...]
+            @note: Compatible with NDBPattern
             """
             pass
     
@@ -111,7 +124,7 @@ class PBRQ():
             @param domain: The domain name for which a range query should be constructed
             @return: A tuple of two sets, the first containing the first query block, the second containing the remaining 
                 queries
-            @note: Compatible with [...]
+            @note: Compatible with DFBPattern
             """
             pass
         
@@ -127,7 +140,7 @@ class PBRQ():
             @return: A list of sets, each set representing a query block with one element from the pattern and at most
                 Config.RQSIZE-1 semi-randomly chosen hosts (sometimes less due to the nature of the random choice function
                 and the set data type eleminating duplicates).
-            @note: Compatible with [...]
+            @note: Compatible with FDBPattern
             """
             # TODO: Check decisions for original FDBRQ function before implementing this
             pass

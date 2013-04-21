@@ -89,9 +89,9 @@ def main(argv=None): # IGNORE:C0111
         parse.Pattern.parse()
         for i in range(args.cnt):
             t = data.DB.chooseRandomTarget()
-            head, block = generate.DRQ.DFBRQ().generateDRQFor(t)
-            at = attacker.Pattern.DFBPattern()
-            res = at.attack(head, block)
+            block = generate.DRQ.FDBRQ().generateDRQFor(t)
+            at = attacker.Pattern.FDBPattern()
+            res = at.attack(block)
             lr = len(res)
             lp = len(data.DB.PATTERNS[t])
             if not Config.QUIET:
@@ -100,6 +100,7 @@ def main(argv=None): # IGNORE:C0111
                 print "# possible targets: " + str(lr)
                 if t not in res:
                     print "[!!!] Target not in result!"
+                    return 2
                 if Config.VERBOSE:
                     print "[V] Length of target pattern: " + str(lp)
             if Config.VERBOSE or Config.STAT:
