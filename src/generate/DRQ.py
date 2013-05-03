@@ -10,6 +10,9 @@ results in different formats.
 from random import shuffle
 from data import DB
 from var import Config
+
+# TODO: Klären: Unvollständige Query-Listen in scope (Verteilte Abfrage von mehreren Servern)?
+# TODO: Refactoring zu Klassen mit Inheritance und gemeinsamer Generator-Funktion, von der nur der Output mod. wird?
 class NDBRQ():
     """No distinguishable Blocks Range Query"""
     
@@ -90,7 +93,7 @@ class FDBRQ():
 
 class PBRQ():
     """Pattern-based range query"""
-    # TODO: Idea: Pad using multiple patterns that sum into the correct amount (Problem: Choice btw. alternatives)
+    # TODO: Idea: Pad using multiple patterns that sum into the correct amount (Problem: Choice betw. alternatives)
     #     If used: For written part, consider timing problems using this method
     # TODO: Idea: Add more blocks that are not relevant to the "real" query.
     #     Meaning: Pattern length 6 -> 8 Blocks, add another Pattern with a length of 2 to continue orig. Pattern.

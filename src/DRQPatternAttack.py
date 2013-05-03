@@ -85,6 +85,7 @@ def main(argv=None): # IGNORE:C0111
         # TODO: Add a compatibility Database for these parameters
         # TODO: Refactor this to be modular with good documentation and less horrible code
         # TODO: Add interactive mode as per the parameter proposed above
+        # TODO: Stats mode: Create output that correlates Pattern length and # of results per algorithm
         stat = {}
         parse.Pattern.parse()
         for i in range(args.cnt):
