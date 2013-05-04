@@ -11,7 +11,7 @@ DRQPatternAttack is a simulator for the Pattern Attack on DNS Range Queries, as 
         
 @license:    To be determined
 
-@contact:    0maass@informatik.uni-hamburg.de
+@contact:    0maass@informatik.uni-hamburg.de (PGP Key ID: 3408825E, Fingerprint 84C4 8097 A3AF 7D55 189A  77AC 169F 9624 3408 825E)
 @deffield    updated: Updated
 '''
 
@@ -30,10 +30,6 @@ __all__ = []
 __version__ = '0.2.1'
 __date__ = '2013-03-15'
 __updated__ = '2013-04-04'
-
-DEBUG = 0
-TESTRUN = 0
-PROFILE = 0
 
 class CLIError(Exception):
     '''Generic exception to raise and log different fatal errors.'''
@@ -72,6 +68,7 @@ def main(argv=None): # IGNORE:C0111
         parser.add_argument('--stat', dest="stat", help="Show stats", action="store_true")
         parser.add_argument("file", help="select pattern file.")
         # TODO: Add Arguments to determine the used combination of generator and attacker
+        # TODO: Add Argument for interactive mode and document it in the help
         
         # Process arguments
         args = parser.parse_args()
@@ -81,25 +78,30 @@ def main(argv=None): # IGNORE:C0111
         Config.RQSIZE = args.num
         Config.STAT = args.stat
         
-        # Starting here: Debug code. For the final version, this should be cleaned up and refactored into
-        # modules and functions.
-        # TODO: implement usage of planned parameters determining combination of generator and attacker
+        # Starting here: Debug and testing code. For the final version, this should be cleaned up and
+        # refactored into modules and functions.
+        # TODO: Implement usage of planned parameters determining combination of generator and attacker
+        # TODO: Add a dictionary mapping parameters to generators and attackers
+        # TODO: Add a compatibility Database for these parameters
+        # TODO: Refactor this to be modular with good documentation and less horrible code
+        # TODO: Add interactive mode as per the parameter proposed above
+        # TODO: Stats mode: Create output that correlates Pattern length and # of results per algorithm
         stat = {}
         parse.Pattern.parse()
         for i in range(args.cnt):
             t = data.DB.chooseRandomTarget()
-            head, block = generate.DRQ.generateDDRQFor(t)
-            at = attacker.Pattern.DFBPattern()
-            res = at.attack(head, block)
+            block = generate.DRQ.FDBRQ().generateDRQFor(t)
+            at = attacker.Pattern.FDBPattern()
+            res = at.attack(block)
             lr = len(res)
             lp = len(data.DB.PATTERNS[t])
             if not Config.QUIET:
                 print "Target: " + t
                 #print "Possible targets: " + str(res)
                 print "# possible targets: " + str(lr)
-                print "Correct target in list: " + str(t in res)
                 if t not in res:
-                    print "------ WTF ------"
+                    print "[!!!] Target not in result!"
+                    return 2
                 if Config.VERBOSE:
                     print "[V] Length of target pattern: " + str(lp)
             if Config.VERBOSE or Config.STAT:
@@ -123,26 +125,10 @@ def main(argv=None): # IGNORE:C0111
         ### handle keyboard interrupt ###
         return 1
     except Exception, e:
-        if DEBUG or TESTRUN:
-            raise(e)
         indent = len(program_name) * " "
         sys.stderr.write(program_name + ": " + repr(e) + "\n")
         sys.stderr.write(indent + "  for help use --help")
         return 2
 
 if __name__ == "__main__":
-    if TESTRUN:
-        import doctest
-        doctest.testmod()
-    if PROFILE:
-        import cProfile
-        import pstats
-        profile_filename = 'DRQPatternAttack_profile.txt'
-        cProfile.run('main()', profile_filename)
-        statsfile = open("profile_stats.txt", "wb")
-        p = pstats.Stats(profile_filename, stream=statsfile)
-        stats = p.strip_dirs().sort_stats('cumulative')
-        stats.print_stats()
-        statsfile.close()
-        sys.exit(0)
     sys.exit(main())
