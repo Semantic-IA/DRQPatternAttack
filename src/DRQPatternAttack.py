@@ -90,9 +90,9 @@ def main(argv=None): # IGNORE:C0111
         parse.Pattern.parse()
         for i in range(args.cnt):
             t = data.DB.chooseRandomTarget()
-            block = generate.DRQ.FDBRQ().generateDRQFor(t)
-            at = attacker.Pattern.FDBPattern()
-            res = at.attack(block)
+            head, block = generate.DRQ.DFBRQ().generateDRQFor(t)
+            at = attacker.Pattern.DFBPattern()
+            res = at.attack(head, block)
             lr = len(res)
             lp = len(data.DB.PATTERNS[t])
             if not Config.QUIET:
@@ -106,19 +106,32 @@ def main(argv=None): # IGNORE:C0111
                     print "[V] Length of target pattern: " + str(lp)
             if Config.VERBOSE or Config.STAT:
                 if lp in stat:
-                    if lr in stat[lp]:
-                        stat[lp][lr] += 1
+                    if "sum" in stat[lp]:
+                        stat[lp]["sum"] += lr
+                        stat[lp]["num"] += 1
                     else:
-                        stat[lp][lr] = 1
+                        stat[lp]["sum"] = lr
+                        stat[lp]["num"] = 1
                 else:
                     stat[lp] = {}
-                    stat[lp][lr] = 1
+                    stat[lp]["sum"] = lr
+                    stat[lp]["num"] = 1
             if not Config.QUIET:
                 print "================================="
         if Config.VERBOSE or Config.STAT:
-            for okey in stat:
-                for ikey in stat[okey]:
-                    print str(okey) + ":" + str(ikey) + ":" + str(stat[okey][ikey])
+            output1 = "results = [0 "
+            output2 = "samples = [0 "
+            for i in range(1,max(stat.keys()),1):
+                try:
+                    output1 += (str(float(stat[i]["sum"] / stat[i]["num"])) + " ")
+                    output2 += (str(stat[i]["num"]) + " ")
+                except KeyError:
+                    output1 += "0 "
+                    output2 += "0 "
+            output1 += "];"
+            output2 += "];"
+            print output1
+            print output2
         
         return 0
     except KeyboardInterrupt:

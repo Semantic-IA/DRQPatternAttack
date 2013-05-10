@@ -11,7 +11,6 @@ from random import shuffle
 from data import DB
 from var import Config
 
-# TODO: Klären: Unvollständige Query-Listen in scope (Verteilte Abfrage von mehreren Servern)?
 # TODO: Refactoring zu Klassen mit Inheritance und gemeinsamer Generator-Funktion, von der nur der Output mod. wird?
 class NDBRQ():
     """No distinguishable Blocks Range Query"""
@@ -29,11 +28,11 @@ class NDBRQ():
         @note: Compatible with NDBPattern
         """
         # TODO: Idea: Add boolean parameter which would guarantee len(query) % Config.RQSIZE == 0?
-        query = []
+        query = set()
         for subquery in DB.PATTERNS[domain]:
-            query.append(subquery)
-            query.extend(DB.chooseRandomHosts(Config.RQSIZE-1))
-        return set(query)
+            query.add(subquery)
+            query.update(DB.chooseRandomHosts(Config.RQSIZE-1))
+        return query
 
 class DFBRQ():
     """Distinguishable first Block Range Query"""
@@ -98,6 +97,9 @@ class PBRQ():
     # TODO: Idea: Add more blocks that are not relevant to the "real" query.
     #     Meaning: Pattern length 6 -> 8 Blocks, add another Pattern with a length of 2 to continue orig. Pattern.
     #     Return Blocks in steps of N Blocks for obfuscation.
+    # TODO: Problem: Weighted Probabilities or completely random selection?
+    #     Weighted: More unlikely patterns are easier to guess correctly, and those are usually the relevant patterns
+    #     Random: More likely patterns are easier to guess correctly, but those are usually also less interesting
     class NDBRQ():
         """No distinguishable blocks range query"""
         def generateDRQFor(self,domain):
