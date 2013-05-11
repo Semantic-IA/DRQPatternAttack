@@ -46,13 +46,14 @@ class DFBPattern():
     the description of the 'No distinguishable blocks pattern attack'.
     """
     
-    def attack(self,fb,rq):
+    def attack(self,block):
         """Attack a given Range Query with a distinguishable first block
         
         @param fb: The first block, as set
         @param rq: The remaining range query, as set
         @return: List of possible results
         """
+        fb, rq = block
         res = []
         rq.update(fb)
         for key in DB.PATTERNS.keys():
