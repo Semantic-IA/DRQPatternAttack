@@ -11,7 +11,7 @@ from random import shuffle
 from data import DB
 from var import Config
 
-class BasicRangeQuery():
+class BasicRangeQuery(object):
     """Basic Range Query generators
     
     All basic generators inherit from this class and use the generator this class provides.
@@ -21,10 +21,20 @@ class BasicRangeQuery():
         """Generator for Basic DNS Range Queries (randomly generated query sets)
         
         @param domain: Domain for which a DNS Range Query should be generated
-        @return: List of Sets, in order, each set representing a query block"""
-        pass
+        @return: List of Sets, in order, each set representing a query block
+        """
+        block = [set()]
+        block[0].add(domain)
+        block[0].update(DB.chooseRandomHosts(Config.RQSIZE-1))
+        for subquery in DB.PATTERNS[domain]:
+            if subquery != domain:
+                tmp = set()
+                tmp.add(subquery)
+                tmp.update(DB.chooseRandomHosts(Config.RQSIZE-1))
+                block.append(tmp)
+        return block
 
-class PatternRangeQuery():
+class PatternRangeQuery(object):
     """Pattern Based Range Query generators
     
     All pattern-based generators inherit from this blass and use the generator this class provides.
@@ -38,7 +48,7 @@ class PatternRangeQuery():
         """
         pass
 
-class category():
+class category(object):
     """Category of Range Queries
     
     All category classes inherit from this class. Those classes order generators into their respective categories.
@@ -112,19 +122,12 @@ class BRQ(category):
                 block, the other blocks can be in any order.
             @note: Compatible with FDBPattern
             """
-            head = [set()]
-            query = []
-            head[0].add(domain)
-            head[0].update(DB.chooseRandomHosts(Config.RQSIZE-1))
-            for subquery in DB.PATTERNS[domain]:
-                if subquery != domain:
-                    block = set()
-                    block.add(subquery)
-                    block.update(DB.chooseRandomHosts(Config.RQSIZE-1))
-                    query.append(block)
-            shuffle(query)
-            head += query
-            return head
+            block = BasicRangeQuery.generateBaseDRQ(self, domain)
+            head = [block[0]]
+            tail = block[1:]
+            shuffle(tail)
+            block = head + tail
+            return block
 
 class PBRQ(category):
     """Pattern-based range query"""

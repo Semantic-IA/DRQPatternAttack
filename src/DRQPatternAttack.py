@@ -66,6 +66,7 @@ def main(argv=None): # IGNORE:C0111
         parser.add_argument('-s', '--size', dest="num", help="size of the range query [default %(default)s]", default="50", type=int)
         parser.add_argument('-c', '--count', dest="cnt", help="Number of random targets to be tried [default %(default)s]", default="50", type=int)
         parser.add_argument('--stat', dest="stat", help="Show stats", action="store_true")
+        parser.add_argument('--target', dest="target", help="Attack this domain", type=str, default="")
         parser.add_argument("file", help="select pattern file.")
         # TODO: Add Arguments to determine the used combination of generator and attacker
         # TODO: Add Argument for interactive mode and document it in the help
@@ -88,51 +89,66 @@ def main(argv=None): # IGNORE:C0111
         # TODO: Stats mode: Create output that correlates Pattern length and # of results per algorithm
         stat = {}
         parse.Pattern.parse()
-        for i in range(args.cnt):
-            t = data.DB.chooseRandomTarget()
-            block = generate.DRQ.BRQ().DFBRQ().generateDRQFor(t)
-            at = attacker.Pattern.DFBPattern()
+        if args.target == "":
+            for i in range(args.cnt):
+                t = data.DB.chooseRandomTarget()
+                block = generate.DRQ.BRQ().FDBRQ().generateDRQFor(t)
+                at = attacker.Pattern.FDBPattern()
+                res = at.attack(block)
+                lr = len(res)
+                lp = len(data.DB.PATTERNS[t])
+                if not Config.QUIET:
+                    print "Target: " + t
+                    #print "Possible targets: " + str(res)
+                    print "# possible targets: " + str(lr)
+                    if t not in res:
+                        print "[!!!] Target not in result!"
+                        return 2
+                    if Config.VERBOSE:
+                        print "[V] Length of target pattern: " + str(lp)
+                if Config.VERBOSE or Config.STAT:
+                    if lp in stat:
+                        if "sum" in stat[lp]:
+                            stat[lp]["sum"] += lr
+                            stat[lp]["num"] += 1
+                        else:
+                            stat[lp]["sum"] = lr
+                            stat[lp]["num"] = 1
+                    else:
+                        stat[lp] = {}
+                        stat[lp]["sum"] = lr
+                        stat[lp]["num"] = 1
+                if not Config.QUIET:
+                    print "================================="
+            if Config.VERBOSE or Config.STAT:
+                output1 = "results = [0 "
+                output2 = "samples = [0 "
+                for i in range(1,max(stat.keys()),1):
+                    try:
+                        output1 += (str(float(stat[i]["sum"] / stat[i]["num"])) + " ")
+                        output2 += (str(stat[i]["num"]) + " ")
+                    except KeyError:
+                        output1 += "0 "
+                        output2 += "0 "
+                output1 += "];"
+                output2 += "];"
+                print output1
+                print output2
+        else:
+            block = generate.DRQ.BRQ().FDBRQ().generateDRQFor(args.target)
+            at = attacker.Pattern.FDBPattern()
             res = at.attack(block)
             lr = len(res)
-            lp = len(data.DB.PATTERNS[t])
+            lp = len(data.DB.PATTERNS[args.target])
             if not Config.QUIET:
-                print "Target: " + t
+                print "Target: " + args.target
                 #print "Possible targets: " + str(res)
                 print "# possible targets: " + str(lr)
-                if t not in res:
+                if args.target not in res:
                     print "[!!!] Target not in result!"
                     return 2
                 if Config.VERBOSE:
                     print "[V] Length of target pattern: " + str(lp)
-            if Config.VERBOSE or Config.STAT:
-                if lp in stat:
-                    if "sum" in stat[lp]:
-                        stat[lp]["sum"] += lr
-                        stat[lp]["num"] += 1
-                    else:
-                        stat[lp]["sum"] = lr
-                        stat[lp]["num"] = 1
-                else:
-                    stat[lp] = {}
-                    stat[lp]["sum"] = lr
-                    stat[lp]["num"] = 1
-            if not Config.QUIET:
-                print "================================="
-        if Config.VERBOSE or Config.STAT:
-            output1 = "results = [0 "
-            output2 = "samples = [0 "
-            for i in range(1,max(stat.keys()),1):
-                try:
-                    output1 += (str(float(stat[i]["sum"] / stat[i]["num"])) + " ")
-                    output2 += (str(stat[i]["num"]) + " ")
-                except KeyError:
-                    output1 += "0 "
-                    output2 += "0 "
-            output1 += "];"
-            output2 += "];"
-            print output1
-            print output2
-        
         return 0
     except KeyboardInterrupt:
         ### handle keyboard interrupt ###
