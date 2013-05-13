@@ -92,8 +92,8 @@ def main(argv=None): # IGNORE:C0111
         if args.target == "":
             for i in range(args.cnt):
                 t = data.DB.chooseRandomTarget()
-                block = generate.DRQ.BRQ().FDBRQ().generateDRQFor(t)
-                at = attacker.Pattern.FDBPattern()
+                block = generate.DRQ.BRQ().NDBRQ().generateDRQFor(t)
+                at = attacker.Pattern.NDBPattern()
                 res = at.attack(block)
                 lr = len(res)
                 lp = len(data.DB.PATTERNS[t])
@@ -135,8 +135,8 @@ def main(argv=None): # IGNORE:C0111
                 print output1
                 print output2
         else:
-            block = generate.DRQ.BRQ().FDBRQ().generateDRQFor(args.target)
-            at = attacker.Pattern.FDBPattern()
+            block = generate.DRQ.BRQ().NDBRQ().generateDRQFor(args.target)
+            at = attacker.Pattern.NDBPattern()
             res = at.attack(block)
             lr = len(res)
             lp = len(data.DB.PATTERNS[args.target])

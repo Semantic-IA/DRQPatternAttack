@@ -12,8 +12,6 @@ The attack functions take different inputs, but will always return a list of pos
 # TODO: Idea: Restructure this into classes to mirror the classes of the generators.
 # TODO: Check: Mathing naming conventions for generators and attackers
 from data import DB
-def intersection(a, b):
-    return list(set(a) & set(b))
 
 class NDBPattern():
     """No distinguishable blocks pattern attack
@@ -30,10 +28,9 @@ class NDBPattern():
         @param rq: A Range Query, as returned by generate.DRQ
         @return: list of possible results
         """
-        # TODO: Think about return format
         res = []
         for key in DB.PATTERNS.keys():
-            inter = intersection(rq,DB.PATTERNS[key])
+            inter = rq & DB.PATTERNS[key]
             if len(inter) == len(DB.PATTERNS[key]):
                 res.append(key)
         return res

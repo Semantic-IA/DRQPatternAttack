@@ -73,11 +73,10 @@ class BRQ(category):
             @return: A set of queries
             @note: Compatible with NDBPattern
             """
-            # TODO: Idea: Add boolean parameter which would guarantee len(query) % Config.RQSIZE == 0?
+            block = BasicRangeQuery.generateBaseDRQ(self, domain)
             query = set()
-            for subquery in DB.PATTERNS[domain]:
-                query.add(subquery)
-                query.update(DB.chooseRandomHosts(Config.RQSIZE-1))
+            for set_of_queries in block:
+                query.update(set_of_queries)
             return query
     
     class DFBRQ(BasicRangeQuery):
@@ -95,16 +94,12 @@ class BRQ(category):
                 queries
             @note: Compatible with DFBPattern
             """
-            # TODO: Add boolean parameter which would guarantee len(query) % Config.RQSIZE == 0?
-            head = set()    # First Set of Queries
-            block = set()   # Remaining Queries
-            head.add(domain)
-            head.update(DB.chooseRandomHosts(Config.RQSIZE-1))
-            for subquery in DB.PATTERNS[domain]:
-                if subquery != domain:
-                    block.add(subquery)
-                    block.update(DB.chooseRandomHosts(Config.RQSIZE-1))
-            return (head, block)
+            block = BasicRangeQuery.generateBaseDRQ(self, domain)
+            head = block[0]    # First Set of Queries
+            tail = set()       # Remaining Queries
+            for set_of_queries in block[1:]: # Add all elements from the tailing query blocks to big query block
+                tail.update(set_of_queries)
+            return (head, tail)
     
     class FDBRQ(BasicRangeQuery):
         """Fully distinguishable blocks range query"""
