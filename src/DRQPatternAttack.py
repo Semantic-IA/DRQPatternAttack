@@ -41,6 +41,74 @@ class CLIError(Exception):
     def __unicode__(self):
         return self.msg
 
+def getGeneratorFor(genID):
+    return generate.DRQ.BRQ().NDBRQ()
+
+def getAttackerFor(attID):
+    return attacker.Pattern.NDBPattern()
+
+def chooseTargets(number_of_targets):
+    returnValue = []
+    for i in range(number_of_targets):
+        returnValue.append(data.DB.chooseRandomTarget())
+    return returnValue
+
+def attack(attackInstance,inputValue):
+    return attackInstance.attack(inputValue)
+
+def generateFor(generatorInstance,domain):
+    return generatorInstance.generateDRQFor(domain)
+
+def attackList(attackerInstance,generatorInstance,list_of_domains):
+    returnValue = {}
+    for domain in list_of_domains:
+        returnValue[domain] = attack(attackerInstance,generateFor(generatorInstance,domain))
+    return returnValue
+
+def validateResults(attackResultDictionary):
+    i = 0
+    for domain in attackResultDictionary.keys():
+        if domain not in attackResultDictionary[domain]:
+            sys.stderr.write("ERROR: " + domain + " not in results\n")
+            sys.stderr.write("       Previously checked " + str(i) + " correct results.\n")
+            sys.stderr.flush()
+            return False
+        else:
+            if not Config.QUIET:
+                print "Target:     " + domain
+                print "# possible: " + str(len(attackResultDictionary[domain]))
+                print "=============================="
+            i += 1
+    return True
+    
+def generateStats(attackResultDictionary):
+    returnValue = {}
+    for domain in attackResultDictionary.keys():
+        pattern_length = len(data.DB.PATTERNS[domain])
+        if pattern_length in returnValue:
+            returnValue[pattern_length]["sum"] += len(attackResultDictionary[domain])
+            returnValue[pattern_length]["num"] += 1
+        else:
+            returnValue[pattern_length] = {}
+            returnValue[pattern_length]["sum"] = len(attackResultDictionary[domain])
+            returnValue[pattern_length]["num"] = 1
+    return returnValue
+
+def printStats(statDictionary):
+    output1 = "results = [0 "
+    output2 = "samples = [0 "
+    for i in range(1,max(statDictionary.keys()),1):
+        try:
+            output1 += (str(float(statDictionary[i]["sum"] / statDictionary[i]["num"])) + " ")
+            output2 += (str(statDictionary[i]["num"]) + " ")
+        except KeyError:
+            output1 += "0 "
+            output2 += "0 "
+    output1 += "];"
+    output2 += "];"
+    print output1
+    print output2
+    
 def main(argv=None): # IGNORE:C0111
     '''Command line options.'''
     
@@ -48,7 +116,6 @@ def main(argv=None): # IGNORE:C0111
         argv = sys.argv
     else:
         sys.argv.extend(argv)
-
     program_name = os.path.basename(sys.argv[0])
     program_version = "v%s" % __version__
     program_build_date = str(__updated__)
@@ -70,6 +137,7 @@ def main(argv=None): # IGNORE:C0111
         parser.add_argument("file", help="select pattern file.")
         # TODO: Add Arguments to determine the used combination of generator and attacker
         # TODO: Add Argument for interactive mode and document it in the help
+        # TODO: Add Argument for Benchmark mode? Time execution of attack and give stats for that as well?
         
         # Process arguments
         args = parser.parse_args()
@@ -78,77 +146,25 @@ def main(argv=None): # IGNORE:C0111
         Config.INFILE = args.file
         Config.RQSIZE = args.num
         Config.STAT = args.stat
-        
-        # Starting here: Debug and testing code. For the final version, this should be cleaned up and
-        # refactored into modules and functions.
+
         # TODO: Implement usage of planned parameters determining combination of generator and attacker
         # TODO: Add a dictionary mapping parameters to generators and attackers
         # TODO: Add a compatibility Database for these parameters
-        # TODO: Refactor this to be modular with good documentation and less horrible code
         # TODO: Add interactive mode as per the parameter proposed above
-        # TODO: Stats mode: Create output that correlates Pattern length and # of results per algorithm
-        stat = {}
         parse.Pattern.parse()
+        target_list = []
         if args.target == "":
-            for i in range(args.cnt):
-                t = data.DB.chooseRandomTarget()
-                block = generate.DRQ.BRQ().NDBRQ().generateDRQFor(t)
-                at = attacker.Pattern.NDBPattern()
-                res = at.attack(block)
-                lr = len(res)
-                lp = len(data.DB.PATTERNS[t])
-                if not Config.QUIET:
-                    print "Target: " + t
-                    #print "Possible targets: " + str(res)
-                    print "# possible targets: " + str(lr)
-                    if t not in res:
-                        print "[!!!] Target not in result!"
-                        return 2
-                    if Config.VERBOSE:
-                        print "[V] Length of target pattern: " + str(lp)
-                if Config.VERBOSE or Config.STAT:
-                    if lp in stat:
-                        if "sum" in stat[lp]:
-                            stat[lp]["sum"] += lr
-                            stat[lp]["num"] += 1
-                        else:
-                            stat[lp]["sum"] = lr
-                            stat[lp]["num"] = 1
-                    else:
-                        stat[lp] = {}
-                        stat[lp]["sum"] = lr
-                        stat[lp]["num"] = 1
-                if not Config.QUIET:
-                    print "================================="
-            if Config.VERBOSE or Config.STAT:
-                output1 = "results = [0 "
-                output2 = "samples = [0 "
-                for i in range(1,max(stat.keys()),1):
-                    try:
-                        output1 += (str(float(stat[i]["sum"] / stat[i]["num"])) + " ")
-                        output2 += (str(stat[i]["num"]) + " ")
-                    except KeyError:
-                        output1 += "0 "
-                        output2 += "0 "
-                output1 += "];"
-                output2 += "];"
-                print output1
-                print output2
+            target_list = chooseTargets(args.cnt)
         else:
-            block = generate.DRQ.BRQ().NDBRQ().generateDRQFor(args.target)
-            at = attacker.Pattern.NDBPattern()
-            res = at.attack(block)
-            lr = len(res)
-            lp = len(data.DB.PATTERNS[args.target])
-            if not Config.QUIET:
-                print "Target: " + args.target
-                #print "Possible targets: " + str(res)
-                print "# possible targets: " + str(lr)
-                if args.target not in res:
-                    print "[!!!] Target not in result!"
-                    return 2
-                if Config.VERBOSE:
-                    print "[V] Length of target pattern: " + str(lp)
+            target_list = list(args.target)
+        generatorInstance = getGeneratorFor(0)
+        attackerInstance = getAttackerFor(0)
+        attackResult = attackList(attackerInstance,generatorInstance,target_list)
+        if not validateResults(attackResult):
+            return 1
+        if Config.STAT or Config.VERBOSE:
+            statResult = generateStats(attackResult)
+            printStats(statResult)
         return 0
     except KeyboardInterrupt:
         ### handle keyboard interrupt ###
