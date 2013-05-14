@@ -75,8 +75,9 @@ def validateResults(attackResultDictionary):
             return False
         else:
             if not Config.QUIET:
-                print "Target:     " + domain
-                print "# possible: " + str(len(attackResultDictionary[domain]))
+                print "Target:       " + domain
+                print "# possible:   " + str(len(attackResultDictionary[domain]))
+                print "len(pattern): " + str(len(data.DB.PATTERNS[domain]))
                 print "=============================="
             i += 1
     return True
@@ -138,6 +139,7 @@ def main(argv=None): # IGNORE:C0111
         # TODO: Add Arguments to determine the used combination of generator and attacker
         # TODO: Add Argument for interactive mode and document it in the help
         # TODO: Add Argument for Benchmark mode? Time execution of attack and give stats for that as well?
+        # TODO: Add progress bar?
         
         # Process arguments
         args = parser.parse_args()
