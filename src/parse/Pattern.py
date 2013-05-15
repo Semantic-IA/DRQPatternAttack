@@ -21,26 +21,29 @@ def parse():
     # FIXME: Add verification of file format, plus exception in case of violation
     # FIXME: Known Issue: leading www. in domain name
     if not Config.QUIET:
-        print("Beginning parsing of pattern file... ")
-    LC = 0
+        print("Beginning parsing of pattern file...")
     with open(Config.INFILE, 'r') as fobj:
-        LC = sum(1 for line in fobj)
-    stat = Progress.Bar(LC,"=")
+        LC = sum(1 for line in fobj)                    # get line count of file (for progress bar)
+    stat = Progress.Bar(LC,"=")                         # get progress bar instance
     for line in open(Config.INFILE, 'r'):               # Open the file for reading
         line = line.strip()                             # Remove trailing newlines
         target = line[:line.find(":")]                  # Find the target
+        if target.startswith("www."):                   # remove leading www. of target
+            target = target[4:]
         queries = line[line.find(":")+1:].split(",")    # Find the queries
         DB.PATTERNS[target] = set()                     # Add target and queries...
         for element in queries:                         # ...and to both datasets in the DB
             if (element.find(":") > 0):
                 element = element[:element.find(":")]   # Remove Port information, if any
+            if element.startswith("www."):
+                element = element[4:]                   # Remove leading www., if any
             DB.QUERIES.add(element)                     # Add to set of all hostnames
             DB.PATTERNS[target].add(element)            # Add to current pattern
-        try:
+        try:                                            # Add target to the dictionary of URLs sorted by length
             DB.SIZES[len(DB.PATTERNS[target])].append(target)
         except KeyError:
             DB.SIZES[len(DB.PATTERNS[target])] = [target]
-        stat.tick()
+        stat.tick()                                     # notify progress bar
     if not Config.QUIET:
         print "Done"
     if Config.VERBOSE:                                 # In case of verbose output, output some stats
