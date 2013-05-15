@@ -25,6 +25,7 @@ import data.DB          # Database # TODO: Remove (debug import)
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
+from argparse import Action
 
 __all__ = []
 __version__ = '0.2.1'
@@ -41,11 +42,16 @@ class CLIError(Exception):
     def __unicode__(self):
         return self.msg
 
+class AvailableOptionsLister(Action):
+    def __call__ (self, parser, namespace, values, option_string=None):
+        print "herp"
+        return 0
+    
 def getGeneratorFor(genID):
-    return generate.DRQ.BRQ().NDBRQ()
+    return generate.DRQ.BRQ().FDBRQ()
 
 def getAttackerFor(attID):
-    return attacker.Pattern.NDBPattern()
+    return attacker.Pattern.FDBPattern()
 
 def chooseTargets(number_of_targets):
     returnValue = []
@@ -123,18 +129,26 @@ def main(argv=None): # IGNORE:C0111
     program_version_message = '%%(prog)s %s (%s)' % (program_version, program_build_date)
     program_shortdesc = __import__('__main__').__doc__.split("\n")[1]
     program_license = '''''' # % (program_shortdesc, str(__date__))
+    program_epilogue = '''Modes of Operation:
+  Blabla
+  blablabla''' # TODO: Add content
 
     try:
         # Setup argument parser
-        parser = ArgumentParser(description=program_license, formatter_class=RawDescriptionHelpFormatter)
-        group = parser.add_mutually_exclusive_group()
-        group.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="enable verbose output (show more information). Verbose Information will be marked with a [V] in the output")
-        group.add_argument("-q", "--quiet", dest="quiet", action="store_true", help="enable quiet mode (only show most likely result)")
+        # TODO: Sort these arguments in a way that makes sense (Order is preserved in final programs --help)
+        parser = ArgumentParser(description=program_license, formatter_class=RawDescriptionHelpFormatter, epilog=program_epilogue)
+        group1 = parser.add_mutually_exclusive_group()
+        group1.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="enable verbose output (show more information). Verbose Information will be marked with a [V] in the output")
+        group1.add_argument("-q", "--quiet", dest="quiet", action="store_true", help="enable quiet mode (only show most likely result)")
+        parser.add_argument("-m", '--mode', dest="mode", help="Enable a specific mode of operation. See --list-modes for Options", default="0", type=str) # choices=[0,1,2,3...]
+        # parser.add_argument("list-modes", action=AvailableOptionsLister, help="List available modes of operation")
         parser.add_argument('--version', action='version', version=program_version_message)
         parser.add_argument('-s', '--size', dest="num", help="size of the range query [default %(default)s]", default="50", type=int)
         parser.add_argument('-c', '--count', dest="cnt", help="Number of random targets to be tried [default %(default)s]", default="50", type=int)
         parser.add_argument('--stat', dest="stat", help="Show stats", action="store_true")
-        parser.add_argument('--target', dest="target", help="Attack this domain", type=str, default="")
+        group2 = parser.add_mutually_exclusive_group()
+        group2.add_argument('--target', dest="target", help="Attack this domain", type=str, default="")
+        group2.add_argument('--all', dest="attack_all", action="store_true", help="Attack all possible targets (may take a long time). Implies -q, --stat")
         parser.add_argument("file", help="select pattern file.")
         # TODO: Add Arguments to determine the used combination of generator and attacker
         # TODO: Add Argument for interactive mode and document it in the help
@@ -148,6 +162,10 @@ def main(argv=None): # IGNORE:C0111
         Config.INFILE = args.file
         Config.RQSIZE = args.num
         Config.STAT = args.stat
+        if args.attack_all:
+            Config.STAT = True
+            Config.VERBOSE = False
+            Config.QUIET = True
 
         # TODO: Implement usage of planned parameters determining combination of generator and attacker
         # TODO: Add a dictionary mapping parameters to generators and attackers
@@ -155,10 +173,12 @@ def main(argv=None): # IGNORE:C0111
         # TODO: Add interactive mode as per the parameter proposed above
         parse.Pattern.parse()
         target_list = []
-        if args.target == "":
-            target_list = chooseTargets(args.cnt)
+        if args.target != "":
+            target_list = args.target
+        elif args.attack_all:
+            target_list = data.DB.PATTERNS.keys()
         else:
-            target_list = list(args.target)
+            target_list = chooseTargets(args.cnt)
         generatorInstance = getGeneratorFor(0)
         attackerInstance = getAttackerFor(0)
         attackResult = attackList(attackerInstance,generatorInstance,target_list)
