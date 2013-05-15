@@ -8,6 +8,7 @@ Parses a pattern file and saves the content in a data structure for later use by
 from var import Config  # Configuration Variables
 from data import DB     # Database to save the parsed Patterns
 from sys import stdout  # For nicer status reports
+from output import Progress
 
 def parse():
     """Parses the INFILE
@@ -20,8 +21,11 @@ def parse():
     # FIXME: Add verification of file format, plus exception in case of violation
     # FIXME: Known Issue: leading www. in domain name
     if not Config.QUIET:
-        stdout.write("Beginning parsing of pattern file... ")
-        stdout.flush()
+        print("Beginning parsing of pattern file... ")
+    LC = 0
+    with open(Config.INFILE, 'r') as fobj:
+        LC = sum(1 for line in fobj)
+    stat = Progress.Bar(LC,"=")
     for line in open(Config.INFILE, 'r'):               # Open the file for reading
         line = line.strip()                             # Remove trailing newlines
         target = line[:line.find(":")]                  # Find the target
@@ -36,6 +40,7 @@ def parse():
             DB.SIZES[len(DB.PATTERNS[target])].append(target)
         except KeyError:
             DB.SIZES[len(DB.PATTERNS[target])] = [target]
+        stat.tick()
     if not Config.QUIET:
         print "Done"
     if Config.VERBOSE:                                 # In case of verbose output, output some stats

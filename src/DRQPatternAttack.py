@@ -22,6 +22,7 @@ import parse.Pattern    # Parser for pattern file
 import generate.DRQ     # DNS Range Query generator
 import attacker.Pattern # Attacker
 import data.DB          # Database # TODO: Remove (debug import)
+import output.Progress  # Progress Bar
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
@@ -46,7 +47,7 @@ class AvailableOptionsLister(Action):
     def __call__ (self, parser, namespace, values, option_string=None):
         print "herp"
         return 0
-    
+
 def getGeneratorFor(genID):
     return generate.DRQ.BRQ().FDBRQ()
 
@@ -66,9 +67,11 @@ def generateFor(generatorInstance,domain):
     return generatorInstance.generateDRQFor(domain)
 
 def attackList(attackerInstance,generatorInstance,list_of_domains):
+    stat = output.Progress.Bar(len(list_of_domains),"=")
     returnValue = {}
     for domain in list_of_domains:
         returnValue[domain] = attack(attackerInstance,generateFor(generatorInstance,domain))
+        stat.tick()
     return returnValue
 
 def validateResults(attackResultDictionary):
@@ -166,7 +169,6 @@ def main(argv=None): # IGNORE:C0111
             Config.STAT = True
             Config.VERBOSE = False
             Config.QUIET = True
-
         # TODO: Implement usage of planned parameters determining combination of generator and attacker
         # TODO: Add a dictionary mapping parameters to generators and attackers
         # TODO: Add a compatibility Database for these parameters
@@ -181,6 +183,7 @@ def main(argv=None): # IGNORE:C0111
             target_list = chooseTargets(args.cnt)
         generatorInstance = getGeneratorFor(0)
         attackerInstance = getAttackerFor(0)
+        print "Beginning Attack..."
         attackResult = attackList(attackerInstance,generatorInstance,target_list)
         if not validateResults(attackResult):
             return 1
