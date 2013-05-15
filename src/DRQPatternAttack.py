@@ -43,16 +43,23 @@ class CLIError(Exception):
     def __unicode__(self):
         return self.msg
 
-class AvailableOptionsLister(Action):
-    def __call__ (self, parser, namespace, values, option_string=None):
-        print "herp"
-        return 0
-
 def getGeneratorFor(genID):
-    return generate.DRQ.BRQ().FDBRQ()
+    generators = {1: generate.DRQ.BRQ().NDBRQ,
+                  2: generate.DRQ.BRQ().DFBRQ,
+                  3: generate.DRQ.BRQ().FDBRQ,
+                  4: generate.DRQ.PBRQ().NDBRQ,
+                  5: generate.DRQ.PBRQ().DFBRQ,
+                  6: generate.DRQ.PBRQ().FDBRQ}
+    return generators[genID]()
 
 def getAttackerFor(attID):
-    return attacker.Pattern.FDBPattern()
+    attackers = {1: attacker.Pattern.NDBPattern,
+                 2: attacker.Pattern.DFBPattern,
+                 3: attacker.Pattern.FDBPattern,
+                 4: attacker.Pattern.NDBPattern,
+                 5: attacker.Pattern.DFBPattern,
+                 6: attacker.Pattern.FDBPattern}
+    return attackers[attID]()
 
 def chooseTargets(number_of_targets):
     returnValue = []
@@ -133,30 +140,34 @@ def main(argv=None): # IGNORE:C0111
     program_shortdesc = __import__('__main__').__doc__.split("\n")[1]
     program_license = '''''' # % (program_shortdesc, str(__date__))
     program_epilogue = '''Modes of Operation:
-  Blabla
-  blablabla''' # TODO: Add content
+  1) No distinguishable Blocks \t\t- Random Generation
+  2) Distinguishable first Block \t- Random Generation
+  3) Fully distinguishable Blocks \t- Random Generation
+  4) No distinguishable Blocks \t\t- Pattern-based generation
+  5) Distinguishable first Block \t- Pattern-based generation
+  6) Fully distinguishable Blocks \t- Pattern-based generation
+  
+  Please consult the thesis to find more information about the modes'''
 
     try:
         # Setup argument parser
         # TODO: Sort these arguments in a way that makes sense (Order is preserved in final programs --help)
         parser = ArgumentParser(description=program_license, formatter_class=RawDescriptionHelpFormatter, epilog=program_epilogue)
         group1 = parser.add_mutually_exclusive_group()
-        group1.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="enable verbose output (show more information). Verbose Information will be marked with a [V] in the output")
-        group1.add_argument("-q", "--quiet", dest="quiet", action="store_true", help="enable quiet mode (only show most likely result)")
-        parser.add_argument("-m", '--mode', dest="mode", help="Enable a specific mode of operation. See --list-modes for Options", default="0", type=str) # choices=[0,1,2,3...]
-        # parser.add_argument("list-modes", action=AvailableOptionsLister, help="List available modes of operation")
+        group1.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="enable verbose output (show more information).")
+        group1.add_argument("-q", "--quiet", dest="quiet", action="store_true", help="enable quiet mode.")
+        parser.add_argument("-m", '--mode', dest="mode", help="Enable a specific mode of operation. See below for possible options. [default %(default)s]", default="1", choices=[1,2,3,4,5,6], type=int) # choices=[0,1,2,3...]
         parser.add_argument('--version', action='version', version=program_version_message)
         parser.add_argument('-s', '--size', dest="num", help="size of the range query [default %(default)s]", default="50", type=int)
         parser.add_argument('-c', '--count', dest="cnt", help="Number of random targets to be tried [default %(default)s]", default="50", type=int)
-        parser.add_argument('--stat', dest="stat", help="Show stats", action="store_true")
+        parser.add_argument('--stat', dest="stat", help="Show statistics about the accuracy of the algorithm", action="store_true")
         group2 = parser.add_mutually_exclusive_group()
-        group2.add_argument('--target', dest="target", help="Attack this domain", type=str, default="")
+        group2.add_argument("-t", '--target', dest="target", metavar="url", help="Attack this domain", type=str, default="")
         group2.add_argument('--all', dest="attack_all", action="store_true", help="Attack all possible targets (may take a long time). Implies -q, --stat")
         parser.add_argument("file", help="select pattern file.")
         # TODO: Add Arguments to determine the used combination of generator and attacker
         # TODO: Add Argument for interactive mode and document it in the help
         # TODO: Add Argument for Benchmark mode? Time execution of attack and give stats for that as well?
-        # TODO: Add progress bar?
         
         # Process arguments
         args = parser.parse_args()
@@ -176,13 +187,13 @@ def main(argv=None): # IGNORE:C0111
         parse.Pattern.parse()
         target_list = []
         if args.target != "":
-            target_list = args.target
+            target_list.append(args.target)
         elif args.attack_all:
             target_list = data.DB.PATTERNS.keys()
         else:
             target_list = chooseTargets(args.cnt)
-        generatorInstance = getGeneratorFor(0)
-        attackerInstance = getAttackerFor(0)
+        generatorInstance = getGeneratorFor(args.mode)
+        attackerInstance = getAttackerFor(args.mode)
         print "Beginning Attack..."
         attackResult = attackList(attackerInstance,generatorInstance,target_list)
         if not validateResults(attackResult):
