@@ -112,9 +112,9 @@ def generateStats(attackResultDictionary):
     return returnValue
 
 def printStats(statDictionary):
-    output1 = "results = [0 "
-    output2 = "samples = [0 "
-    for i in range(1,max(statDictionary.keys()),1):
+    output1 = "results = ["
+    output2 = "samples = ["
+    for i in range(1,max(statDictionary.keys())+1,1):
         try:
             output1 += (str(float(statDictionary[i]["sum"] / statDictionary[i]["num"])) + " ")
             output2 += (str(statDictionary[i]["num"]) + " ")

@@ -7,7 +7,6 @@ Parses a pattern file and saves the content in a data structure for later use by
 '''
 from var import Config  # Configuration Variables
 from data import DB     # Database to save the parsed Patterns
-from sys import stdout  # For nicer status reports
 from output import Progress
 
 def parse():
