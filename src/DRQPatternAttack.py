@@ -100,7 +100,7 @@ def validateResults(attackResultDictionary):
 def generateStats(attackResultDictionary):
     returnValue = {}
     for domain in attackResultDictionary.keys():
-        pattern_length = len(data.DB.getPatternLengthForHost(domain))
+        pattern_length = data.DB.getPatternLengthForHost(domain)
         if pattern_length in returnValue:
             returnValue[pattern_length]["sum"] += len(attackResultDictionary[domain])
             returnValue[pattern_length]["num"] += 1
