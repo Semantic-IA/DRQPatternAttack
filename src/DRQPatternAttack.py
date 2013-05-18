@@ -14,19 +14,19 @@ DRQPatternAttack is a simulator for the Pattern Attack on DNS Range Queries, as 
 @contact:    0maass@informatik.uni-hamburg.de (PGP Key ID: 3408825E, Fingerprint 84C4 8097 A3AF 7D55 189A  77AC 169F 9624 3408 825E)
 @deffield    updated: Updated
 '''
-
+# TODO: Refactoring to use getters and setters from DB
 import sys
 import os
 from var import Config  # Config Variables
 import parse.Pattern    # Parser for pattern file
 import generate.DRQ     # DNS Range Query generator
 import attacker.Pattern # Attacker
-import data.DB          # Database # TODO: Remove (debug import)
-import util.Progress  # Progress Bar
+import data.DB          # Database
+import util.Progress    # Progress Bar
+import util.Error       # Error logging
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
-from argparse import Action
 
 __all__ = []
 __version__ = '0.2.1'
@@ -64,7 +64,7 @@ def getAttackerFor(attID):
 def chooseTargets(number_of_targets):
     returnValue = []
     for i in range(number_of_targets):
-        returnValue.append(data.DB.chooseRandomTarget())
+        returnValue.append(data.DB.getRandomTarget())
     return returnValue
 
 def attack(attackInstance,inputValue):
@@ -165,8 +165,6 @@ def main(argv=None): # IGNORE:C0111
         group2.add_argument("-t", '--target', dest="target", metavar="url", help="Attack this domain", type=str, default="")
         group2.add_argument('--all', dest="attack_all", action="store_true", help="Attack all possible targets (may take a long time). Implies -q, --stat")
         parser.add_argument("file", help="select pattern file.")
-        # TODO: Add Arguments to determine the used combination of generator and attacker
-        # TODO: Add Argument for interactive mode and document it in the help
         # TODO: Add Argument for Benchmark mode? Time execution of attack and give stats for that as well?
         
         # Process arguments
@@ -180,10 +178,6 @@ def main(argv=None): # IGNORE:C0111
             Config.STAT = True
             Config.VERBOSE = False
             Config.QUIET = True
-        # TODO: Implement usage of planned parameters determining combination of generator and attacker
-        # TODO: Add a dictionary mapping parameters to generators and attackers
-        # TODO: Add a compatibility Database for these parameters
-        # TODO: Add interactive mode as per the parameter proposed above
         parse.Pattern.parse()
         target_list = []
         if args.target != "":
@@ -197,7 +191,7 @@ def main(argv=None): # IGNORE:C0111
         print "Beginning Attack..."
         attackResult = attackList(attackerInstance,generatorInstance,target_list)
         if not validateResults(attackResult):
-            return 1
+            util.Error.printErrorAndExit("Something went wrong. Exiting!")
         if Config.STAT or Config.VERBOSE:
             statResult = generateStats(attackResult)
             printStats(statResult)

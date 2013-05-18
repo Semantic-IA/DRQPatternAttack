@@ -8,7 +8,7 @@ The attack functions take different inputs, but will always return a list of pos
 
 @author: Max Maass
 '''
-
+# TODO: Refactoring to use getters and setters from DB
 # TODO: Idea: Restructure this into classes to mirror the classes of the generators.
 # TODO: Check: Mathing naming conventions for generators and attackers
 from data import DB

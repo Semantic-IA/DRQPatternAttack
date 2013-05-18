@@ -7,9 +7,11 @@ results in different formats.
 
 @author: Max Maass
 '''
+# TODO: Check if refactoring for getters and setters is complete
 from random import shuffle, sample
 from data import DB
 from var import Config
+from util import Error
 
 class BasicRangeQuery(object):
     """Basic Range Query generators
@@ -26,14 +28,16 @@ class BasicRangeQuery(object):
         @param domain: Domain for which a DNS Range Query should be generated
         @return: List of Sets, in order, each set representing a query block
         """
+        if not DB.isValidTarget(domain):
+            Error.printErrorAndExit(domain + " is not a valid target")
         block = [set()]
         block[0].add(domain)
-        block[0].update(DB.chooseRandomHosts(Config.RQSIZE-1))
+        block[0].update(DB.getRandomHosts(Config.RQSIZE-1))
         for subquery in DB.PATTERNS[domain]:
             if subquery != domain:
                 tmp = set()
                 tmp.add(subquery)
-                tmp.update(DB.chooseRandomHosts(Config.RQSIZE-1))
+                tmp.update(DB.getRandomHosts(Config.RQSIZE-1))
                 block.append(tmp)
         return block
 
@@ -55,38 +59,69 @@ class PatternRangeQuery(object):
         @param domain: Domain for which a DNS Range Query should be generated
         @return: List of Sets, in order, each set representing a query block
         """
+        if not DB.isValidTarget(domain):
+            Error.printErrorAndExit(domain + " is not a valid target")
         pattern_length = len(DB.PATTERNS[domain])
-        block = []
-        if len(DB.SIZES[pattern_length]) >= Config.RQSIZE:
-            #print "1"
-            hosts = set(DB.chooseRandomHostsByPatternLength(pattern_length, Config.RQSIZE-1))
-            #print "2"
+        block = [set()]
+        num_of_available_patterns = DB.getNumberOfHostsWithPatternLength(pattern_length)
+        if num_of_available_patterns >= Config.RQSIZE:
+            hosts = set(DB.getRandomHostsByPatternLength(pattern_length, Config.RQSIZE-1))
             hosts.add(domain)
-            #print "3"
             pattern_copy = {}
             for host in hosts:
-                pattern_copy[host] = DB.PATTERNS[host].copy()
-            #print "4"
-            for i in range(pattern_length):
+                pattern_copy[host] = DB.getPatternForHost(host).copy()
+                pattern_copy[host].remove(host) # TODO: Ugly code. Any way to make this less horrible?
+                block[0].add(host)
+            for i in range(1, pattern_length, 1):
                 block.append(set())
                 for host in pattern_copy.keys():
-            #       print "herp"
-                    block[i].add(pattern_copy[host].pop()) # If there is a bug, it's probably here. Famous last words.
-        else:
-            print "ERROR: Unimplemented."
+                    block[i].add(pattern_copy[host].pop())
+        else: # TODO: Optimize this shit
+            num_of_needed_patterns = Config.RQSIZE - num_of_available_patterns
+            padding = []
+            for i in range(num_of_needed_patterns):
+                pad1_len, pad2_len = self.getRandomNumbersWithSum(2,pattern_length)
+                while ((DB.getNumberOfHostsWithPatternLength(pad1_len) == 0) \
+                    or (DB.getNumberOfHostsWithPatternLength(pad2_len) == 0)):
+                    pad1_len, pad2_len = self.getRandomNumbersWithSum(2, pattern_length)
+                pad1_host = DB.getRandomHostsByPatternLength(pad1_len,1)[0]
+                pad1_pattern = DB.getPatternForHost(pad1_host).copy()
+                pad1_pattern.remove(pad1_host) 
+                block[0].add(pad1_host)
+                padding.append([pad1_host])
+                for host in pad1_pattern:
+                    padding[i].append(host)
+                pad2_host = DB.getRandomHostsByPatternLength(pad2_len,1)[0]
+                pad2_pattern = DB.getPatternForHost(pad2_host).copy()
+                pad2_pattern.remove(pad2_host)
+                padding[i].append(pad2_host)
+                for host in pad2_pattern:
+                    padding[i].append(host)
+            pattern_copy = {}
+            for element in DB.getRandomHostsByPatternLength(pattern_length, num_of_available_patterns):
+                pattern_copy[element] = DB.getPatternForHost(element).copy()
+                pattern_copy[element].remove(element)
+                block[0].add(element)
+            for i in range(1,pattern_length,1):
+                block.append(set())
+                for host in pattern_copy.keys():
+                    block[i].add(pattern_copy[host].pop())
+                for pattern in padding:
+                    block[i].add(pattern[i])
         return block
 
     
     def getRandomNumbersWithSum(self,num_of_rands,sum_of_rands):
-        """Return a randomly chosen list of n positive integers summing to total.
+        """Return a randomly chosen list of num_of_rands positive integers summing to sum_of_rands.
         Each such list is equally likely to occur.
         
         Source: http://stackoverflow.com/a/3590105/1232833
         
         @param num_of_rands: The Number of random numbers that should be returned
         @param sum_of_rands: The sum the random numbers should add up to
-        @return: A list of random numbers with the sum of sum_of_rands"""
-
+        @return: A list of random numbers with the sum of sum_of_rands
+        """
+        assert num_of_rands > 0 and sum_of_rands > num_of_rands
         dividers = sorted(sample(xrange(1, sum_of_rands), num_of_rands - 1))
         return [a - b for a, b in zip(dividers + [sum_of_rands], [0] + dividers)]
 

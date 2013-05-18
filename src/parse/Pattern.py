@@ -5,6 +5,7 @@ Parses a pattern file and saves the content in a data structure for later use by
 
 @author: Max Maass
 '''
+# TODO: Refactoring to getters and setters in DB
 from var import Config  # Configuration Variables
 from data import DB     # Database to save the parsed Patterns
 from util import Progress
@@ -18,7 +19,6 @@ def parse():
     @bug: Leading www. in domain name may cause issues if the www. is omitted in the pattern
     """
     # FIXME: Add verification of file format, plus exception in case of violation
-    # FIXME: Known Issue: leading www. in domain name
     if not Config.QUIET:
         print("Beginning parsing of pattern file...")
     with open(Config.INFILE, 'r') as fobj:
@@ -31,6 +31,7 @@ def parse():
             target = target[4:]
         queries = line[line.find(":")+1:].split(",")    # Find the queries
         DB.PATTERNS[target] = set()                     # Add target and queries...
+        DB.PATTERNS[target].add(target)
         for element in queries:                         # ...and to both datasets in the DB
             if (element.find(":") > 0):
                 element = element[:element.find(":")]   # Remove Port information, if any
