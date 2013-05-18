@@ -41,6 +41,6 @@ class Bar():
             sys.stderr.write("%s" % (self.pip * int(floor(nstate * self.onePip) - floor(cstate * self.onePip))))
             sys.stderr.flush()
         if nstate == self.eventCount:
-            print ""
+            sys.stderr.write("\n")
         self.state = nstate
         return

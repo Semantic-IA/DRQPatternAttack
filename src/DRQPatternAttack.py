@@ -22,7 +22,7 @@ import parse.Pattern    # Parser for pattern file
 import generate.DRQ     # DNS Range Query generator
 import attacker.Pattern # Attacker
 import data.DB          # Database # TODO: Remove (debug import)
-import output.Progress  # Progress Bar
+import util.Progress  # Progress Bar
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
@@ -74,7 +74,7 @@ def generateFor(generatorInstance,domain):
     return generatorInstance.generateDRQFor(domain)
 
 def attackList(attackerInstance,generatorInstance,list_of_domains):
-    stat = output.Progress.Bar(len(list_of_domains),"=")
+    stat = util.Progress.Bar(len(list_of_domains),"=")
     returnValue = {}
     for domain in list_of_domains:
         returnValue[domain] = attack(attackerInstance,generateFor(generatorInstance,domain))

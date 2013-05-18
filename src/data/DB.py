@@ -7,7 +7,7 @@ from random import choice, sample
 PATTERNS = {}
 QUERIES = set()
 SIZES = {}
-# TODO: Verify that chooseRandom{Target,Hosts} works on Sets
+
 def chooseRandomTarget():
     """Choose random Host from the list of possible targets
     
@@ -24,3 +24,15 @@ def chooseRandomHosts(number):
     @return: A list of unique hostnames (as strings)
     """
     return sample(QUERIES, number)
+
+def chooseRandomHostsByPatternLength(size,number):
+    """Choose random Hostnames from the set of all Hostnames with a pattern with a specified length.
+    
+    @param size: The size of the pattern each hostname should have
+    @param number: The number of Hostnames that should be returned
+    @return: A list of unique Hostnames (as strings)
+    
+    @requires: number <= len(SIZES[size])
+    """
+    assert number <= len(SIZES[size])
+    return sample(SIZES[size], number)

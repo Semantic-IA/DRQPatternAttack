@@ -7,7 +7,7 @@ results in different formats.
 
 @author: Max Maass
 '''
-from random import shuffle
+from random import shuffle, sample
 from data import DB
 from var import Config
 
@@ -19,6 +19,9 @@ class BasicRangeQuery(object):
     """
     def generateBaseDRQ(self,domain):
         """Generator for Basic DNS Range Queries (randomly generated query sets)
+        
+        Queries are unique inside their respective sets, but may appear more than once across different 
+        query blocks. 
         
         @param domain: Domain for which a DNS Range Query should be generated
         @return: List of Sets, in order, each set representing a query block
@@ -43,12 +46,51 @@ class PatternRangeQuery(object):
     def generateBaseDRQ(self,domain):
         """Generator for Pattern-Based DNS Range Queries (trying to fill the query blocks with patterns)
         
+        Queries are unique inside their respective sets, but may appear more than once across different
+        query blocks.
+        
+        At the moment, it is not guaranteed that Config.RQSIZE different patterns are returned, but the only
+        alternative is Config.RQSIZE-1 different patterns, which is acceptable.
+        
         @param domain: Domain for which a DNS Range Query should be generated
         @return: List of Sets, in order, each set representing a query block
         """
-        pass
+        pattern_length = len(DB.PATTERNS[domain])
+        block = []
+        if len(DB.SIZES[pattern_length]) >= Config.RQSIZE:
+            #print "1"
+            hosts = set(DB.chooseRandomHostsByPatternLength(pattern_length, Config.RQSIZE-1))
+            #print "2"
+            hosts.add(domain)
+            #print "3"
+            pattern_copy = {}
+            for host in hosts:
+                pattern_copy[host] = DB.PATTERNS[host].copy()
+            #print "4"
+            for i in range(pattern_length):
+                block.append(set())
+                for host in pattern_copy.keys():
+            #       print "herp"
+                    block[i].add(pattern_copy[host].pop()) # If there is a bug, it's probably here. Famous last words.
+        else:
+            print "ERROR: Unimplemented."
+        return block
 
-class category(object):
+    
+    def getRandomNumbersWithSum(self,num_of_rands,sum_of_rands):
+        """Return a randomly chosen list of n positive integers summing to total.
+        Each such list is equally likely to occur.
+        
+        Source: http://stackoverflow.com/a/3590105/1232833
+        
+        @param num_of_rands: The Number of random numbers that should be returned
+        @param sum_of_rands: The sum the random numbers should add up to
+        @return: A list of random numbers with the sum of sum_of_rands"""
+
+        dividers = sorted(sample(xrange(1, sum_of_rands), num_of_rands - 1))
+        return [a - b for a, b in zip(dividers + [sum_of_rands], [0] + dividers)]
+
+class Category(object):
     """Category of Range Queries
     
     All category classes inherit from this class. Those classes order generators into their respective categories.
@@ -57,7 +99,7 @@ class category(object):
     """
     pass
 
-class BRQ(category):
+class BRQ(Category):
     class NDBRQ(BasicRangeQuery):
         """No distinguishable Blocks Range Query"""
         
@@ -124,7 +166,7 @@ class BRQ(category):
             block = head + tail
             return block
 
-class PBRQ(category):
+class PBRQ(Category):
     """Pattern-based range query"""
     # TODO: Idea: Pad using multiple patterns that sum into the correct amount (Problem: Choice betw. alternatives)
     #     If used: For written part, consider timing problems using this method
@@ -148,7 +190,11 @@ class PBRQ(category):
             @return: A set of queries
             @note: Compatible with NDBPattern
             """
-            pass
+            block = PatternRangeQuery.generateBaseDRQ(self, domain)
+            query = set()
+            for set_of_queries in block:
+                query.update(set_of_queries)
+            return query
     
     class DFBRQ(PatternRangeQuery):
         """Distinguishable first block range query"""
@@ -165,7 +211,12 @@ class PBRQ(category):
                 queries
             @note: Compatible with DFBPattern
             """
-            pass
+            block = PatternRangeQuery.generateBaseDRQ(self, domain)
+            head = block[0]    # First Set of Queries
+            tail = set()       # Remaining Queries
+            for set_of_queries in block[1:]: # Add all elements from the tailing query blocks to big query block
+                tail.update(set_of_queries)
+            return (head, tail)
         
     class FDBRQ(PatternRangeQuery):
         """Fully distinguishable blocks range query"""
@@ -182,4 +233,9 @@ class PBRQ(category):
             @note: Compatible with FDBPattern
             """
             # TODO: Check decisions for original FDBRQ function before implementing this
-            pass
+            block = PatternRangeQuery.generateBaseDRQ(self, domain)
+            head = [block[0]]
+            tail = block[1:]
+            shuffle(tail)
+            block = head + tail
+            return block
