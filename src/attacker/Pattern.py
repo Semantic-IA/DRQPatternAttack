@@ -29,9 +29,9 @@ class NDBPattern():
         @return: list of possible results
         """
         res = []
-        for key in DB.PATTERNS.keys():
-            inter = rq & DB.PATTERNS[key]
-            if len(inter) == len(DB.PATTERNS[key]):
+        for key in DB.getAllPossibleTargets():
+            inter = rq & DB.getPatternForHost(key)
+            if len(inter) == DB.getPatternLengthForHost(key):
                 res.append(key)
         return res
     
@@ -53,9 +53,9 @@ class DFBPattern():
         fb, rq = block
         res = []
         rq.update(fb)
-        for key in DB.PATTERNS.keys():
+        for key in DB.getAllPossibleTargets():
             if key in fb:
-                if DB.PATTERNS[key] <= rq:
+                if DB.getPatternForHost(key) <= rq:
                     res.append(key)
         return res
 
@@ -75,13 +75,14 @@ class FDBPattern():
         @return: List of possible results
         """
         res = []
-        for key in DB.SIZES[len(blocklist)]:
+        length = len(blocklist)
+        for key in DB.getAllTargetsWithLength(length):
             if key in blocklist[0]:
                 tmp = blocklist[1:]
                 cnt = {}
-                for i in range(len(blocklist)-1):
+                for i in range(length-1):
                     cnt[i] = 0
-                for query in DB.PATTERNS[key]:
+                for query in DB.getPatternForHost(key):
                     if query != key:
                         for i in range(len(tmp)):
                             if query in tmp[i]:

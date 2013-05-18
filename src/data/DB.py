@@ -57,7 +57,11 @@ def isValidTarget(host):
     @param host: The hostname
     @return: True or False
     """
-    return host in PATTERNS.keys()
+    try:
+        PATTERNS[host]
+        return True
+    except KeyError:
+        return False
 
 def getPatternForHost(host):
     """Get the Pattern for the provided hostname
@@ -67,3 +71,49 @@ def getPatternForHost(host):
     """
     assert isValidTarget(host)
     return PATTERNS[host]
+
+def getPatternLengthForHost(host):
+    """Get the length of the pattern for the provided hostname
+    
+    @param host: Hostname
+    @return: Length of the Pattern
+    """
+    assert isValidTarget(host)
+    return len(PATTERNS[host])
+
+def getAllPossibleTargets():
+    """Get a list of all targets that have a pattern associated with them
+    
+    @return: List of targets
+    """
+    return PATTERNS.keys()
+
+def getAllTargetsWithLength(length):
+    """Get a list of all targets whose patterns have a specific length
+    
+    @param length: The length
+    @return: A list of possible Targets
+    """
+    assert length > 0
+    try:
+        return SIZES[length]
+    except KeyError:
+        return []
+
+def addTarget(target,pattern):
+    """Add a new target to the dictionary of targets.
+    
+    @param target: hostname of the target (String)
+    @param pattern: query pattern (set)
+    """
+    assert target != ""                 # Target not empty
+    assert pattern != set([])           # Pattern not empty
+    assert not isValidTarget(target)    # Target does not exist yet
+    PATTERNS[target] = pattern
+    try:
+        SIZES[len(pattern)].append(target)
+    except KeyError:
+        SIZES[len(pattern)] = [target]
+    QUERIES.update(pattern)
+    return
+

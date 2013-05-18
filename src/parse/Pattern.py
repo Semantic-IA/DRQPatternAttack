@@ -30,19 +30,15 @@ def parse():
         if target.startswith("www."):                   # remove leading www. of target
             target = target[4:]
         queries = line[line.find(":")+1:].split(",")    # Find the queries
-        DB.PATTERNS[target] = set()                     # Add target and queries...
-        DB.PATTERNS[target].add(target)
-        for element in queries:                         # ...and to both datasets in the DB
+        pattern = set()                                 # Add target and queries...
+        pattern.add(target)
+        for element in queries:
             if (element.find(":") > 0):
                 element = element[:element.find(":")]   # Remove Port information, if any
             if element.startswith("www."):
                 element = element[4:]                   # Remove leading www., if any
-            DB.QUERIES.add(element)                     # Add to set of all hostnames
-            DB.PATTERNS[target].add(element)            # Add to current pattern
-        try:                                            # Add target to the dictionary of URLs sorted by length
-            DB.SIZES[len(DB.PATTERNS[target])].append(target)
-        except KeyError:
-            DB.SIZES[len(DB.PATTERNS[target])] = [target]
+            pattern.add(element)                        # Add to current pattern
+        DB.addTarget(target, pattern)
         stat.tick()                                     # notify progress bar
     if not Config.QUIET:
         print "Done"
