@@ -5,7 +5,6 @@ Parses a pattern file and saves the content in a data structure for later use by
 
 @author: Max Maass
 '''
-# TODO: Refactoring to getters and setters in DB
 from var import Config  # Configuration Variables
 from data import DB     # Database to save the parsed Patterns
 from util import Progress
@@ -42,7 +41,3 @@ def parse():
         stat.tick()                                     # notify progress bar
     if not Config.QUIET:
         print "Done"
-    if Config.VERBOSE:                                 # In case of verbose output, output some stats
-        print "[V] Added " + str(len(DB.PATTERNS)) + " patterns."
-        print "[V] " + str(len(DB.QUERIES)) + " Hostnames in Dataset."
-        print "[V] That is an average of " + str(float(len(DB.QUERIES)) / len(DB.PATTERNS)) + " Queries per Pattern"

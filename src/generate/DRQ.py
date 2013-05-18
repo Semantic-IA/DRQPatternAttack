@@ -7,7 +7,6 @@ results in different formats.
 
 @author: Max Maass
 '''
-# TODO: Check if refactoring for getters and setters is complete
 from random import shuffle, sample
 from data import DB
 from var import Config
@@ -28,12 +27,13 @@ class BasicRangeQuery(object):
         @param domain: Domain for which a DNS Range Query should be generated
         @return: List of Sets, in order, each set representing a query block
         """
+        # FIXME: Performance upgrade: Request all random hosts in a big batch instead of many small ones.
         if not DB.isValidTarget(domain):
             Error.printErrorAndExit(domain + " is not a valid target")
         block = [set()]
         block[0].add(domain)
         block[0].update(DB.getRandomHosts(Config.RQSIZE-1))
-        for subquery in DB.PATTERNS[domain]:
+        for subquery in DB.getPatternForHost(domain):
             if subquery != domain:
                 tmp = set()
                 tmp.add(subquery)

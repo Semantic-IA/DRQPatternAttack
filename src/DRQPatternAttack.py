@@ -14,7 +14,6 @@ DRQPatternAttack is a simulator for the Pattern Attack on DNS Range Queries, as 
 @contact:    0maass@informatik.uni-hamburg.de (PGP Key ID: 3408825E, Fingerprint 84C4 8097 A3AF 7D55 189A  77AC 169F 9624 3408 825E)
 @deffield    updated: Updated
 '''
-# TODO: Refactoring to use getters and setters from DB
 import sys
 import os
 from var import Config  # Config Variables
@@ -93,7 +92,7 @@ def validateResults(attackResultDictionary):
             if not Config.QUIET:
                 print "Target:       " + domain
                 print "# possible:   " + str(len(attackResultDictionary[domain]))
-                print "len(pattern): " + str(len(data.DB.PATTERNS[domain]))
+                print "len(pattern): " + str(data.DB.getPatternLengthForHost(domain))
                 print "=============================="
             i += 1
     return True
@@ -183,7 +182,7 @@ def main(argv=None): # IGNORE:C0111
         if args.target != "":
             target_list.append(args.target)
         elif args.attack_all:
-            target_list = data.DB.PATTERNS.keys()
+            target_list = data.DB.getAllPossibleTargets()
         else:
             target_list = chooseTargets(args.cnt)
         generatorInstance = getGeneratorFor(args.mode)
