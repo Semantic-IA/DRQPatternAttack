@@ -8,12 +8,9 @@ The attack functions take different inputs, but will always return a list of pos
 
 @author: Max Maass
 '''
-
 # TODO: Idea: Restructure this into classes to mirror the classes of the generators.
 # TODO: Check: Mathing naming conventions for generators and attackers
 from data import DB
-def intersection(a, b):
-    return list(set(a) & set(b))
 
 class NDBPattern():
     """No distinguishable blocks pattern attack
@@ -30,11 +27,10 @@ class NDBPattern():
         @param rq: A Range Query, as returned by generate.DRQ
         @return: list of possible results
         """
-        # TODO: Think about return format
         res = []
-        for key in DB.PATTERNS.keys():
-            inter = intersection(rq,DB.PATTERNS[key])
-            if len(inter) == len(DB.PATTERNS[key]):
+        for key in DB.getAllPossibleTargets():
+            inter = rq & DB.getPatternForHost(key)
+            if len(inter) == DB.getPatternLengthForHost(key):
                 res.append(key)
         return res
     
@@ -46,18 +42,19 @@ class DFBPattern():
     the description of the 'No distinguishable blocks pattern attack'.
     """
     
-    def attack(self,fb,rq):
+    def attack(self,block):
         """Attack a given Range Query with a distinguishable first block
         
         @param fb: The first block, as set
         @param rq: The remaining range query, as set
         @return: List of possible results
         """
+        fb, rq = block
         res = []
         rq.update(fb)
-        for key in DB.PATTERNS.keys():
+        for key in DB.getAllPossibleTargets():
             if key in fb:
-                if DB.PATTERNS[key] <= rq:
+                if DB.getPatternForHost(key) <= rq:
                     res.append(key)
         return res
 
@@ -77,13 +74,14 @@ class FDBPattern():
         @return: List of possible results
         """
         res = []
-        for key in DB.SIZES[len(blocklist)]:
+        length = len(blocklist)
+        for key in DB.getAllTargetsWithLength(length):
             if key in blocklist[0]:
                 tmp = blocklist[1:]
                 cnt = {}
-                for i in range(len(blocklist)-1):
+                for i in range(length-1):
                     cnt[i] = 0
-                for query in DB.PATTERNS[key]:
+                for query in DB.getPatternForHost(key):
                     if query != key:
                         for i in range(len(tmp)):
                             if query in tmp[i]:
