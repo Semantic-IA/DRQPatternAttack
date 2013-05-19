@@ -11,7 +11,7 @@ from random import shuffle, sample
 from data import DB
 from var import Config
 from util import Error
-
+# TODO: Refactor into multiple modules?
 class BasicRangeQuery(object):
     """Basic Range Query generators
     
@@ -31,14 +31,17 @@ class BasicRangeQuery(object):
         if not DB.isValidTarget(domain):
             Error.printErrorAndExit(domain + " is not a valid target")
         block = [set()]
+        pattern = DB.getPatternForHost(domain)
+        randoms = DB.getRandomHosts((Config.RQSIZE-1)*len(pattern))
+        pattern.remove(domain)
         block[0].add(domain)
-        block[0].update(DB.getRandomHosts(Config.RQSIZE-1))
-        for subquery in DB.getPatternForHost(domain):
-            if subquery != domain:
-                tmp = set()
-                tmp.add(subquery)
-                tmp.update(DB.getRandomHosts(Config.RQSIZE-1))
-                block.append(tmp)
+        block[0].update(randoms[:Config.RQSIZE-1])
+        i = 1
+        for subquery in pattern:
+            block.append(set())
+            block[i].add(subquery)
+            block[i].update(randoms[i*(Config.RQSIZE-1):(i+1)*(Config.RQSIZE-1)])
+            i+=1
         return block
 
 class PatternRangeQuery(object):

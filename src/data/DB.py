@@ -4,11 +4,11 @@ Holds the Data parsed from the pattern file for use in other modules
 @author: Max Maass
 '''
 from random import choice, sample
+from util import Error
 PATTERNS = {}
 QUERIES = set()
 SIZES = {}
 
-# TODO: Implement and use GETter, SETter, IS instead of direct access to the vars
 def getRandomTarget():
     """Choose random Host from the list of possible targets
     
@@ -24,7 +24,8 @@ def getRandomHosts(number):
     @param number: Number of Hostnames to return
     @return: A list of unique hostnames (as strings)
     """
-    assert number > 0
+    if not number > 0:
+        Error.printErrorAndExit("getRandomHosts: number must be > 0, was " + str(number))
     return sample(QUERIES, number)
 
 def getRandomHostsByPatternLength(size,number):
@@ -36,7 +37,8 @@ def getRandomHostsByPatternLength(size,number):
     
     @requires: number <= len(SIZES[size])
     """
-    assert number <= getNumberOfHostsWithPatternLength(size)
+    if not number <= getNumberOfHostsWithPatternLength(size):
+        Error.printErrorAndExit("getRandomHostsByPatternLength: number must be <= number of available patterns, was " + str(number) + "/" + str(getNumberOfHostsWithPatternLength(size)))
     return sample(SIZES[size], number)
 
 def getNumberOfHostsWithPatternLength(length):
@@ -45,7 +47,8 @@ def getNumberOfHostsWithPatternLength(length):
     @param length: Pattern length
     @return: Number of hosts with that pattern length
     """
-    assert length > 0
+    if not length > 0:
+        Error.printErrorAndExit("getNumberOfHostsWithPatternLength: length must be > 0, was " + str(length))
     try:
         return len(SIZES[length])
     except KeyError:
@@ -69,7 +72,8 @@ def getPatternForHost(host):
     @param host: Hostname
     @return: A reference to the Pattern in the Pattern DB (a set)
     """
-    assert isValidTarget(host)
+    if not isValidTarget(host):
+        Error.printErrorAndExit("getPatternForHost: Invalid host " + str(host))
     return PATTERNS[host]
 
 def getPatternLengthForHost(host):
@@ -78,7 +82,8 @@ def getPatternLengthForHost(host):
     @param host: Hostname
     @return: Length of the Pattern
     """
-    assert isValidTarget(host)
+    if not isValidTarget(host):
+        Error.printErrorAndExit("getPatternLengthForHost: Invalid host " + str(host))
     return len(PATTERNS[host])
 
 def getAllPossibleTargets():
@@ -94,7 +99,8 @@ def getAllTargetsWithLength(length):
     @param length: The length
     @return: A list of possible Targets
     """
-    assert length > 0
+    if not length > 0:
+        Error.printErrorAndExit("getAllTargetsWithLength: length must be > 0, was " + str(length))
     try:
         return SIZES[length]
     except KeyError:
@@ -116,4 +122,3 @@ def addTarget(target,pattern):
         SIZES[len(pattern)] = [target]
     QUERIES.update(pattern)
     return
-
