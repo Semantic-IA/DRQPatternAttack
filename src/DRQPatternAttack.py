@@ -28,9 +28,9 @@ from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
 __all__ = []
-__version__ = '0.2.1'
+__version__ = '0.3'
 __date__ = '2013-03-15'
-__updated__ = '2013-04-04'
+__updated__ = '2013-05-19'
 
 class CLIError(Exception):
     '''Generic exception to raise and log different fatal errors.'''
