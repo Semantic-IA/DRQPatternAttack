@@ -9,7 +9,7 @@ The attack functions take different inputs, but will always return a list of pos
 @author: Max Maass
 '''
 # TODO: Idea: Restructure this into classes to mirror the classes of the generators.
-# TODO: Check: Mathing naming conventions for generators and attackers
+# TODO: Check: Matching naming conventions for generators and attackers
 from data import DB
 
 class NDBPattern():

@@ -23,6 +23,7 @@ import attacker.Pattern # Attacker
 import data.DB          # Database
 import util.Progress    # Progress Bar
 import util.Error       # Error logging
+import util.Parallel
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
@@ -49,7 +50,7 @@ def getGeneratorFor(genID):
                   4: generate.DRQ.PBRQ().NDBRQ,
                   5: generate.DRQ.PBRQ().DFBRQ,
                   6: generate.DRQ.PBRQ().FDBRQ}
-    return generators[genID]()
+    return generators[genID]
 
 def getAttackerFor(attID):
     attackers = {1: attacker.Pattern.NDBPattern,
@@ -58,7 +59,7 @@ def getAttackerFor(attID):
                  4: attacker.Pattern.NDBPattern,
                  5: attacker.Pattern.DFBPattern,
                  6: attacker.Pattern.FDBPattern}
-    return attackers[attID]()
+    return attackers[attID]
 
 def chooseTargets(number_of_targets):
     returnValue = []
@@ -67,10 +68,10 @@ def chooseTargets(number_of_targets):
     return returnValue
 
 def attack(attackInstance,inputValue):
-    return attackInstance.attack(inputValue)
+    return attackInstance().attack(inputValue)
 
 def generateFor(generatorInstance,domain):
-    return generatorInstance.generateDRQFor(domain)
+    return generatorInstance().generateDRQFor(domain)
 
 def attackList(attackerInstance,generatorInstance,list_of_domains):
     stat = util.Progress.Bar(len(list_of_domains),"=")
@@ -79,6 +80,10 @@ def attackList(attackerInstance,generatorInstance,list_of_domains):
         returnValue[domain] = attack(attackerInstance,generateFor(generatorInstance,domain))
         stat.tick()
     return returnValue
+
+def attackParallel(attackerInstance,generatorInstance,list_of_domains):
+    stat = util.Progress.Bar(len(list_of_domains),"=")
+    return util.Parallel.parallelize(attackerInstance, generatorInstance, list_of_domains, stat)
 
 def validateResults(attackResultDictionary):
     i = 0
@@ -159,9 +164,10 @@ def main(argv=None): # IGNORE:C0111
         parser.add_argument('--version', action='version', version=program_version_message)
         parser.add_argument('-s', '--size', dest="num", help="size of the range query [default %(default)s]", default="50", type=int)
         parser.add_argument('-c', '--count', dest="cnt", help="Number of random targets to be tried [default %(default)s]", default="50", type=int)
+        parser.add_argument('-t', '--threads', dest="threads", help="Number of Threads used for processing [default %(default)s]", default="1", type=int)
         parser.add_argument('--stat', dest="stat", help="Show statistics about the accuracy of the algorithm", action="store_true")
         group2 = parser.add_mutually_exclusive_group()
-        group2.add_argument("-t", '--target', dest="target", metavar="url", help="Attack this domain", type=str, default="")
+        group2.add_argument('--target', dest="target", metavar="url", help="Attack this domain", type=str, default="")
         group2.add_argument('--all', dest="attack_all", action="store_true", help="Attack all possible targets (may take a long time). Implies -q, --stat")
         parser.add_argument("file", help="select pattern file.")
         # TODO: Add Argument for Benchmark mode? Time execution of attack and give stats for that as well?
@@ -173,6 +179,7 @@ def main(argv=None): # IGNORE:C0111
         Config.INFILE = args.file
         Config.RQSIZE = args.num
         Config.STAT = args.stat
+        Config.THREADS = args.threads
         if args.attack_all:
             Config.STAT = True
             Config.VERBOSE = False
@@ -188,7 +195,10 @@ def main(argv=None): # IGNORE:C0111
         generatorInstance = getGeneratorFor(args.mode)
         attackerInstance = getAttackerFor(args.mode)
         print "Beginning Attack..."
-        attackResult = attackList(attackerInstance,generatorInstance,target_list)
+        if Config.THREADS > 1:
+            attackResult = attackParallel(attackerInstance,generatorInstance,target_list)
+        else:
+            attackResult = attackList(attackerInstance,generatorInstance,target_list)
         if not validateResults(attackResult):
             util.Error.printErrorAndExit("Something went wrong. Exiting!")
         if Config.STAT or Config.VERBOSE:
