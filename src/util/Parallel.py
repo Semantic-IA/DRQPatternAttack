@@ -4,10 +4,9 @@ Parallelize a task
 @author: Max Maass
 '''
 # TODO: More Docs
+# TODO: Find out why the progress bar seems to bug out on -m 3 -t 4 --all
 import multiprocessing
-import Queue
 import var.Config
-from math import floor
 
 def parallelize(attackerFunction, generatorFunction, args, ProgressBarInstance):
     '''Parallelize the call of targetFunction into count subprocesses
