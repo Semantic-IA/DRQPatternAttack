@@ -14,6 +14,7 @@ DRQPatternAttack is a simulator for the Pattern Attack on DNS Range Queries, as 
 @contact:    0maass@informatik.uni-hamburg.de (PGP Key ID: 3408825E, Fingerprint 84C4 8097 A3AF 7D55 189A  77AC 169F 9624 3408 825E)
 @deffield    updated: Updated
 '''
+# TODO: Überall "Aufrufmuster" => "Anfragemuster"
 import sys
 import os
 from var import Config  # Config Variables
@@ -120,7 +121,7 @@ def printStats(statDictionary):
     output2 = "samples = ["
     for i in range(1,max(statDictionary.keys())+1,1):
         try:
-            output1 += (str(float(statDictionary[i]["sum"] / statDictionary[i]["num"])) + " ")
+            output1 += (str(statDictionary[i]["sum"] / float(statDictionary[i]["num"])) + " ")
             output2 += (str(statDictionary[i]["num"]) + " ")
         except KeyError:
             output1 += "0 "
