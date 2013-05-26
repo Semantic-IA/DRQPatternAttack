@@ -74,7 +74,7 @@ def getPatternForHost(host):
     """
     if not isValidTarget(host):
         Error.printErrorAndExit("getPatternForHost: Invalid host " + str(host))
-    return PATTERNS[host]
+    return PATTERNS[host].copy()
 
 def getPatternLengthForHost(host):
     """Get the length of the pattern for the provided hostname

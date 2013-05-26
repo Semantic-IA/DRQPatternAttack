@@ -10,6 +10,8 @@ Code inspired by http://stackoverflow.com/a/3160819/1232833, but modified.
 import sys
 from math import floor
 import os
+from multiprocessing import Lock
+
 
 def getTTYSize():
     columns = 50
@@ -22,6 +24,7 @@ def getTTYSize():
 
 class Bar():
     # TODO: Think about interaction with -q
+    state = 0
     def __init__(self,eventCount,pip):
         ttywidth = getTTYSize()
         self.onePip = float((ttywidth-2) / float(eventCount))
@@ -33,14 +36,16 @@ class Bar():
         sys.stderr.write("[%s]" % (" " * (ttywidth-2)))
         sys.stderr.flush()
         sys.stderr.write("\b" * (ttywidth-1)) # return to start of line, after '['
+        self.parallelLock = Lock()
     
     def tick(self):
-        cstate = self.state
-        nstate = cstate +1
-        if floor(cstate * self.onePip) < floor(nstate * self.onePip):
-            sys.stderr.write("%s" % (self.pip * int(floor(nstate * self.onePip) - floor(cstate * self.onePip))))
-            sys.stderr.flush()
-        if nstate == self.eventCount:
-            sys.stderr.write("\n")
-        self.state = nstate
-        return
+        with self.parallelLock:
+            cstate = self.state
+            nstate = cstate +1
+            if floor(cstate * self.onePip) < floor(nstate * self.onePip):
+                sys.stderr.write("%s" % (self.pip * int(floor(nstate * self.onePip) - floor(cstate * self.onePip))))
+                sys.stderr.flush()
+            if nstate == self.eventCount:
+                sys.stderr.write("\n")
+            self.state = nstate
+            return

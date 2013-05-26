@@ -27,7 +27,6 @@ class BasicRangeQuery(object):
         @param domain: Domain for which a DNS Range Query should be generated
         @return: List of Sets, in order, each set representing a query block
         """
-        # FIXME: Performance upgrade: Request all random hosts in a big batch instead of many small ones.
         if not DB.isValidTarget(domain):
             Error.printErrorAndExit(domain + " is not a valid target")
         block = [set()]
