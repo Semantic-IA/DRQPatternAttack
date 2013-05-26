@@ -15,6 +15,7 @@ DRQPatternAttack is a simulator for the Pattern Attack on DNS Range Queries, as 
 @deffield    updated: Updated
 '''
 # TODO: Überall "Aufrufmuster" => "Anfragemuster"
+# FIXME: Length of Pattern falsch?
 import sys
 import os
 from var import Config  # Config Variables
