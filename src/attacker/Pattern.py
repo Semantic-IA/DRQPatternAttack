@@ -53,11 +53,11 @@ class DFBPatternBRQ():
         @return: List of possible results
         """
         fb, rq = block
-        pattern_length = 1+int(round(len(rq)/float(len(fb))))
-        inaccuracy = int(math.ceil(pattern_length/100.0*2.1))
-        # We are calculating the inaccuracy of the pattern length based on an estimated function describing the maximum
-        # error of the calculation.
-        # TODO: Fix: Make inaccuracy function dependant on N, or it will not work properly for all N. And use N+1 in it, just in case.
+        pattern_length = 1 + round(len(rq) / float(len(fb)))
+        suspected_n = 1 + round((len(rq) + len(fb)) / pattern_length)
+        inaccuracy = int(math.ceil(pattern_length - (pattern_length * (suspected_n - 1)) / suspected_n))
+        # We are calculating the inaccuracy of the pattern length based on a function describing the maximum
+        # error of the calculation. For more information, please see the written Thesis.
         res = []
         rq.update(fb)
         possibilities = []
