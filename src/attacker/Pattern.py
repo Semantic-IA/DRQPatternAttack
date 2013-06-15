@@ -51,12 +51,11 @@ class DFBPattern():
         @param rq: The remaining range query, as set
         @return: List of possible results
         """
-        #TODO: Use |Pattern|==1+round(|rq|/|fb|)
-        #TODO: Use N=round((|rq|+|fb|)/|Pattern|)
         fb, rq = block
+        pattern_length = 1+int(round(len(rq)/float(len(fb))))
         res = []
         rq.update(fb)
-        for key in DB.getAllPossibleTargets():
+        for key in DB.getAllTargetsWithLength(pattern_length):
             if key in fb:
                 if DB.getPatternForHost(key) <= rq:
                     res.append(key)
