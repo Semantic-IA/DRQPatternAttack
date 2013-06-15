@@ -55,7 +55,9 @@ class DFBPattern():
         pattern_length = 1+int(round(len(rq)/float(len(fb))))
         res = []
         rq.update(fb)
-        for key in DB.getAllTargetsWithLength(pattern_length):
+        for key in DB.getAllTargetsWithLength(pattern_length) + DB.getAllTargetsWithLength(pattern_length+1):
+            # We cannot be sure that the pattern length is actually pattern_length, so we also add patterns with a length of pattern_length+1
+            # If we would not do this, extremely long patterns like the one for addin77.blogspot.com would consistently fail
             if key in fb:
                 if DB.getPatternForHost(key) <= rq:
                     res.append(key)

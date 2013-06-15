@@ -111,7 +111,7 @@ def getAllTargetsWithLength(length):
     if not length > 0:
         Error.printErrorAndExit("getAllTargetsWithLength: length must be > 0, was " + str(length))
     try:
-        return SIZES[length]
+        return list(SIZES[length])
     except KeyError:
         return []
 
