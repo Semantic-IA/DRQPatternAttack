@@ -13,6 +13,7 @@ The attack functions take different inputs, but will always return a list of pos
 from data import DB
 import math
 
+
 class NDBPattern():
     """No distinguishable blocks pattern attack
 
@@ -62,9 +63,9 @@ class DFBPattern():
         possibilities = []
         for c in range(-inaccuracy, inaccuracy+1, 1):
             if (pattern_length + c >= 1):
-                possibilities.extend(DB.getAllTargetsWithLength(pattern_length + c))
-        for key in possibilities:
-            if key in fb:
+                possibilities.append(pattern_length + c)
+        for key in fb:
+            if DB.isValidTarget(key) and DB.getPatternLengthForHost(key) in possibilities:
                 if DB.getPatternForHost(key) <= rq:
                     res.append(key)
         return res

@@ -15,17 +15,17 @@ DRQPatternAttack is a simulator for the Pattern Attack on DNS Range Queries, as 
 @deffield    updated: Updated
 '''
 # TODO: Überall "Aufrufmuster" => "Anfragemuster"
-# FIXME: Irgendwo in -m 1 ist noch massiv der Wurm drin (stats geben BS aus). Check!
+
 import sys
 import os
-from var import Config  # Config Variables
-import parse.Pattern    # Parser for pattern file
-import generate.DRQ     # DNS Range Query generator
-import attacker.Pattern # Attacker
-import data.DB          # Database
-import util.Progress    # Progress Bar
-import util.Error       # Error logging
-import util.Parallel
+from var import Config      # Config Variables
+import parse.Pattern        # Parser for pattern file
+import generate.DRQ         # DNS Range Query generator
+import attacker.Pattern     # Attacker
+import data.DB              # Database
+import util.Progress        # Progress Bar
+import util.Error           # Error logging
+import util.Parallel        # Parallel Processing
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
@@ -50,21 +50,21 @@ class CLIError(Exception):
 
 
 def getGeneratorFor(genID):
-    generators = {1: generate.DRQ.BRQ().NDBRQ, 
-                  2: generate.DRQ.BRQ().DFBRQ, 
-                  3: generate.DRQ.BRQ().FDBRQ, 
-                  4: generate.DRQ.PBRQ().NDBRQ, 
-                  5: generate.DRQ.PBRQ().DFBRQ, 
+    generators = {1: generate.DRQ.BRQ().NDBRQ,
+                  2: generate.DRQ.BRQ().DFBRQ,
+                  3: generate.DRQ.BRQ().FDBRQ,
+                  4: generate.DRQ.PBRQ().NDBRQ,
+                  5: generate.DRQ.PBRQ().DFBRQ,
                   6: generate.DRQ.PBRQ().FDBRQ}
     return generators[genID]
 
 
 def getAttackerFor(attID):
-    attackers = {1: attacker.Pattern.NDBPattern, 
-                 2: attacker.Pattern.DFBPattern, 
-                 3: attacker.Pattern.FDBPattern, 
-                 4: attacker.Pattern.NDBPattern, 
-                 5: attacker.Pattern.DFBPattern, 
+    attackers = {1: attacker.Pattern.NDBPattern,
+                 2: attacker.Pattern.DFBPattern,
+                 3: attacker.Pattern.FDBPattern,
+                 4: attacker.Pattern.NDBPattern,
+                 5: attacker.Pattern.DFBPattern,
                  6: attacker.Pattern.FDBPattern}
     return attackers[attID]
 
@@ -157,7 +157,7 @@ def main(argv=None):  # IGNORE:C0111
     program_version = "v%s" % __version__
     program_build_date = str(__updated__)
     program_version_message = '%%(prog)s %s (%s)' % (program_version, program_build_date)
-    program_shortdesc = __import__('__main__').__doc__.split("\n")[1]
+    # program_shortdesc = __import__('__main__').__doc__.split("\n")[1]
     program_license = ''''''  # % (program_shortdesc, str(__date__))
     program_epilogue = '''Modes of Operation:
   1) No distinguishable Blocks \t\t- Random Generation
@@ -200,7 +200,11 @@ def main(argv=None):  # IGNORE:C0111
             Config.STAT = True
             Config.VERBOSE = False
             Config.QUIET = True
+
+        # Parse input file
         parse.Pattern.parse()
+
+        # Choose targets
         target_list = []
         if args.target != "":
             target_list.append(args.target)
@@ -208,9 +212,15 @@ def main(argv=None):  # IGNORE:C0111
             target_list = data.DB.getAllPossibleTargets()
         else:
             target_list = chooseTargets(args.cnt)
+
+        # Get Generators and Attackers
         generatorInstance = getGeneratorFor(args.mode)
         attackerInstance = getAttackerFor(args.mode)
-        print "Beginning Attack..."
+
+        if not Config.QUIET:
+            print "Beginning Attack..."
+
+        # Begin Attack procedure
         if Config.THREADS > 1:
             attackResult = attackParallel(attackerInstance, generatorInstance, target_list)
         else:
@@ -221,6 +231,7 @@ def main(argv=None):  # IGNORE:C0111
             statResult = generateStats(attackResult)
             printStats(statResult)
         return 0
+
     except KeyboardInterrupt:
         ### handle keyboard interrupt ###
         return 1

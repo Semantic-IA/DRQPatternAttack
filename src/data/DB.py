@@ -8,6 +8,7 @@ from util import Error
 PATTERNS = {}
 QUERIES = set()
 SIZES = {}
+LENGTH = {}
 
 
 def getRandomTarget():
@@ -91,7 +92,7 @@ def getPatternLengthForHost(host):
     """
     if not isValidTarget(host):
         Error.printErrorAndExit("getPatternLengthForHost: Invalid host " + str(host))
-    return len(PATTERNS[host])
+    return LENGTH[host]
 
 
 def getAllPossibleTargets():
@@ -126,9 +127,11 @@ def addTarget(target, pattern):
     assert pattern != set([])           # Pattern not empty
     assert not isValidTarget(target)    # Target does not exist yet
     PATTERNS[target] = pattern
+    length = len(pattern)
     try:
-        SIZES[len(pattern)].append(target)
+        SIZES[length].append(target)
     except KeyError:
-        SIZES[len(pattern)] = [target]
+        SIZES[length] = [target]
+    LENGTH[target] = length
     QUERIES.update(pattern)
     return

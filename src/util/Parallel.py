@@ -8,9 +8,10 @@ Parallelize a task
 import multiprocessing
 import var.Config
 
+
 def parallelize(attackerFunction, generatorFunction, args, ProgressBarInstance):
     '''Parallelize the call of targetFunction into count subprocesses
-    
+
     @param targetFunction: The function to call
     @param args: The argument to the function (only one argument supported)
     @param count: The number of Subprocesses to be spawned
@@ -34,9 +35,10 @@ def parallelize(attackerFunction, generatorFunction, args, ProgressBarInstance):
         p.join()
     return res_dict
 
+
 def catchResult(attackerInstance, generatorInstance, args, res_queue, ProgressBarInstance):
     '''Catch the results the called function provides and add them to the result_queue
-    
+
     @param targetFunction: the function to call
     @param args: The List of Arguments in the format [["domain_name",[pattern]],["domain_name",[pattern]],...]
     @param res_queue: The queue in which to save the results (Results are saved as one dictionary and submitted in the end)
