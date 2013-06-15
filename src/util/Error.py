@@ -8,7 +8,9 @@ Created on May 18, 2013
 
 from sys import stderr
 
+
 def printErrorAndExit(error_message):
     """Docstring"""
+    # TODO: Add Docstring
     stderr.write("ERROR: " + error_message + "\n")
     exit(1)
