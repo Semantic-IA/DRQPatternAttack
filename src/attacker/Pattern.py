@@ -37,8 +37,8 @@ class NDBPattern():
         return res
 
 
-class DFBPattern():
-    """Distinguishable First Block Pattern Attack
+class DFBPatternBRQ():
+    """Distinguishable First Block Pattern Attack for the basic (random) range query generation.
 
     This attack assumes that the first block of the queries can be distinguished from the following blocks, while
     all following blocks are indistinguishable from each other. This assumption is realistic for the reasons given in
@@ -66,6 +66,31 @@ class DFBPattern():
                 possibilities.append(pattern_length + c)
         for key in fb:
             if DB.isValidTarget(key) and DB.getPatternLengthForHost(key) in possibilities:
+                if DB.getPatternForHost(key) <= rq:
+                    res.append(key)
+        return res
+
+
+class DFBPatternPRQ():
+    """Distinguishable First Block Pattern Attack for the pattern-based range query generation.
+
+    This attack assumes that the first block of the queries can be distinguished from the following blocks, while
+    all following blocks are indistinguishable from each other. This assumption is realistic for the reasons given in
+    the description of the 'No distinguishable blocks pattern attack'.
+    """
+
+    def attack(self, block):
+        """Attack a given Range Query with a distinguishable first block
+
+        @param fb: The first block, as set
+        @param rq: The remaining range query, as set
+        @return: List of possible results
+        """
+        fb, rq = block
+        res = []
+        rq.update(fb)
+        for key in fb:
+            if DB.isValidTarget(key):
                 if DB.getPatternForHost(key) <= rq:
                     res.append(key)
         return res

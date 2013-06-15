@@ -61,10 +61,10 @@ def getGeneratorFor(genID):
 
 def getAttackerFor(attID):
     attackers = {1: attacker.Pattern.NDBPattern,
-                 2: attacker.Pattern.DFBPattern,
+                 2: attacker.Pattern.DFBPatternBRQ,
                  3: attacker.Pattern.FDBPattern,
                  4: attacker.Pattern.NDBPattern,
-                 5: attacker.Pattern.DFBPattern,
+                 5: attacker.Pattern.DFBPatternPRQ,
                  6: attacker.Pattern.FDBPattern}
     return attackers[attID]
 
