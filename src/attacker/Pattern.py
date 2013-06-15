@@ -11,7 +11,7 @@ The attack functions take different inputs, but will always return a list of pos
 # TODO: Idea: Restructure this into classes to mirror the classes of the generators.
 # TODO: Check: Matching naming conventions for generators and attackers
 from data import DB
-
+import math
 
 class NDBPattern():
     """No distinguishable blocks pattern attack
@@ -53,11 +53,17 @@ class DFBPattern():
         """
         fb, rq = block
         pattern_length = 1+int(round(len(rq)/float(len(fb))))
+        inaccuracy = int(math.ceil(pattern_length/100.0*2.1))
+        # We are calculating the inaccuracy of the pattern length based on an estimated function describing the maximum
+        # error of the calculation.
+        # TODO: Fix: Make inaccuracy function dependant on N, or it will not work properly for all N. And use N+1 in it, just in case.
         res = []
         rq.update(fb)
-        for key in DB.getAllTargetsWithLength(pattern_length) + DB.getAllTargetsWithLength(pattern_length+1):
-            # We cannot be sure that the pattern length is actually pattern_length, so we also add patterns with a length of pattern_length+1
-            # If we would not do this, extremely long patterns like the one for addin77.blogspot.com would consistently fail
+        possibilities = []
+        for c in range(-inaccuracy, inaccuracy+1, 1):
+            if (pattern_length + c >= 1):
+                possibilities.extend(DB.getAllTargetsWithLength(pattern_length + c))
+        for key in possibilities:
             if key in fb:
                 if DB.getPatternForHost(key) <= rq:
                     res.append(key)
