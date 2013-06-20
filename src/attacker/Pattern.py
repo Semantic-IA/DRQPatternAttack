@@ -55,15 +55,15 @@ class DFBPatternBRQ():
         fb, rq = block
         pattern_length = 1 + round(len(rq) / float(len(fb)))
         suspected_n = 1 + round((len(rq) + len(fb)) / pattern_length)
-        inaccuracy = int(math.ceil(pattern_length - (pattern_length * (suspected_n - 1)) / suspected_n))
+        inaccuracy = int(math.ceil(-(pattern_length - (pattern_length * suspected_n) / (suspected_n - 1))))
         # We are calculating the inaccuracy of the pattern length based on a function describing the maximum
-        # error of the calculation. For more information, please see the written Thesis.
+        # error of the calculation of the suspected pattern length. For more information, please see the written Thesis.
         res = []
         rq.update(fb)
         possibilities = []
         for c in range(-inaccuracy, inaccuracy+1, 1):
             if (pattern_length + c >= 1):
-                possibilities.append(pattern_length + c)
+                possibilities.append(int(pattern_length) + c)
         for key in fb:
             if DB.isValidTarget(key) and DB.getPatternLengthForHost(key) in possibilities:
                 if DB.getPatternForHost(key) <= rq:
