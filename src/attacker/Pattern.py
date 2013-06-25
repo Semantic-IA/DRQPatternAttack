@@ -10,6 +10,7 @@ The attack functions take different inputs, but will always return a list of pos
 '''
 # TODO: Idea: Restructure this into classes to mirror the classes of the generators.
 # TODO: Check: Matching naming conventions for generators and attackers
+# TODO: Add comments to explain what is happening
 from data import DB
 import math
 
@@ -111,6 +112,7 @@ class FDBPattern():
         @param blocklist: A list of sets, each set representing a block, the main target in the first block.
         @return: List of possible results
         """
+        # TODO: Das lässt sich sicherlich noch etwas optimieren...
         res = []
         length = len(blocklist)
         for key in DB.getAllTargetsWithLength(length):
