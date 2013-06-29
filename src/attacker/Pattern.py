@@ -112,7 +112,7 @@ class FDBPattern():
         @param blocklist: A list of sets, each set representing a block, the main target in the first block.
         @return: List of possible results
         """
-        # TODO: Das lässt sich sicherlich noch etwas optimieren...
+        # TODO: Das laesst sich sicherlich noch etwas optimieren...
         res = []
         length = len(blocklist)
         for key in DB.getAllTargetsWithLength(length):
