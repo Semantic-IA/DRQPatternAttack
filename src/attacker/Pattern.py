@@ -54,19 +54,28 @@ class DFBPatternBRQ():
         @return: List of possible results
         """
         fb, rq = block
-        pattern_length = 1 + round(len(rq) / float(len(fb)))
-        suspected_n = 1 + round((len(rq) + len(fb)) / pattern_length)
-        inaccuracy = int(math.ceil(-(pattern_length - (pattern_length * suspected_n) / (suspected_n - 1))))
-        # We are calculating the inaccuracy of the pattern length based on a function describing the maximum
-        # error of the calculation of the suspected pattern length. For more information, please see the written Thesis.
         res = []
+        suspected_n = float(len(fb))
+        # pattern_length = 1 + round(len(rq) / float(len(fb)))
+        # suspected_n = 1 + round((len(rq) + len(fb)) / pattern_length)
+        # inaccuracy = int(math.ceil(-(pattern_length - (pattern_length * suspected_n) / (suspected_n - 1))))
+        # # We are calculating the inaccuracy of the pattern length based on a function describing the maximum
+        # # error of the calculation of the suspected pattern length. For more information, please see the written Thesis.
         rq.update(fb)
-        possibilities = []
-        for c in range(-inaccuracy, inaccuracy+1, 1):
-            if (pattern_length + c >= 1):
-                possibilities.append(int(pattern_length) + c)
+        rqlen = len(rq)
+        pattern_length_max = math.ceil(rqlen / suspected_n)
+        pattern_length_max += math.ceil(pattern_length_max / suspected_n) # TODO: Faule variante. Geht noch was besseres?
+        # Increase maximum pattern length, because duplicates could lead to a miscalculation of up to floor(real_pattern_length/real_N).
+        # We are using ceil() to avoid border cases where the real M would lead to x in that calculation, while our detected M
+        # only leads to x-1. Those cases would be few and far between, considering the chances of actually getting so many duplicates,
+        # but nevertheless, they should be dealt with.
+        pattern_length_min = math.floor(rqlen / (suspected_n+1))
+        # possibilities = []
+        #for c in range(-inaccuracy, inaccuracy+1, 1):
+        #    if (pattern_length + c >= 1):
+        #        possibilities.append(int(pattern_length) + c)
         for key in fb:
-            if DB.isValidTarget(key) and DB.getPatternLengthForHost(key) in possibilities:
+            if DB.isValidTarget(key) and (pattern_length_min <= DB.getPatternLengthForHost(key) <= pattern_length_max):
                 if DB.getPatternForHost(key) <= rq:
                     res.append(key)
         return res
