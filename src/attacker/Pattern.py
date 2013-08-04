@@ -56,11 +56,6 @@ class DFBPatternBRQ():
         fb, rq = block
         res = []
         suspected_n = float(len(fb))
-        # pattern_length = 1 + round(len(rq) / float(len(fb)))
-        # suspected_n = 1 + round((len(rq) + len(fb)) / pattern_length)
-        # inaccuracy = int(math.ceil(-(pattern_length - (pattern_length * suspected_n) / (suspected_n - 1))))
-        # # We are calculating the inaccuracy of the pattern length based on a function describing the maximum
-        # # error of the calculation of the suspected pattern length. For more information, please see the written Thesis.
         rq.update(fb)
         rqlen = len(rq)
         pattern_length_max = math.ceil(rqlen / suspected_n)
@@ -70,10 +65,6 @@ class DFBPatternBRQ():
         # only leads to x-1. Those cases would be few and far between, considering the chances of actually getting so many duplicates,
         # but nevertheless, they should be dealt with.
         pattern_length_min = math.floor(rqlen / (suspected_n+1))
-        # possibilities = []
-        #for c in range(-inaccuracy, inaccuracy+1, 1):
-        #    if (pattern_length + c >= 1):
-        #        possibilities.append(int(pattern_length) + c)
         for key in fb:
             if DB.isValidTarget(key) and (pattern_length_min <= DB.getPatternLengthForHost(key) <= pattern_length_max):
                 if DB.getPatternForHost(key) <= rq:
