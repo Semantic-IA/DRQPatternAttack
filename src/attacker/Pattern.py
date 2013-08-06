@@ -31,10 +31,11 @@ class NDBPattern():
         @return: list of possible results
         """
         res = []
-        for key in DB.getAllPossibleTargets():
-            inter = rq & DB.getPatternForHost(key)
-            if len(inter) == DB.getPatternLengthForHost(key):
-                res.append(key)
+        for element in rq:
+            if DB.isValidTarget(element):
+                inter = rq & DB.getPatternForHost(element)
+                if len(inter) == DB.getPatternLengthForHost(element):
+                    res.append(element)
         return res
 
 
