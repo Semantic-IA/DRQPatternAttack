@@ -266,7 +266,8 @@ class PBRQ(Category):
             """Generate a Range Query with fully distinguishable blocks, meaning that each block contains exactly one
             element of the pattern, and len(list_of_blocks) == len(pattern).
 
-            Returned hostnames are unique [in a fashion to be decided, see TODO below].
+            Returned hostnames are unique within their respective blocks, but not guaranteed to be unique across multiple
+            blocks.
 
             @param domain: The domain name for which a range query should be constructed
             @return: A list of sets, each set representing a query block with one element from the pattern and at most
@@ -274,7 +275,6 @@ class PBRQ(Category):
                 and the set data type eleminating duplicates).
             @note: Compatible with FDBPattern
             """
-            # TODO: Check decisions for original FDBRQ function before implementing this
             block = PatternRangeQuery.generateBaseDRQ(self, domain)
             head = [block[0]]
             tail = block[1:]
