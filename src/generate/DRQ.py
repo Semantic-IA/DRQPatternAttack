@@ -68,7 +68,8 @@ class PatternRangeQuery(object):
             Error.printErrorAndExit(domain + " is not a valid target")
         pattern_length = len(DB.PATTERNS[domain])
         block = [set()]
-        num_of_available_patterns = DB.getNumberOfHostsWithPatternLength(pattern_length)
+        num_of_available_patterns = DB.getNumberOfHostsWithPatternLength(pattern_length) 
+        # TODO: currently, there is still the possibility of drawing the pattern of "domain" as a random pattern. Fix this.
         if num_of_available_patterns >= Config.RQSIZE:
             hosts = set(DB.getRandomHostsByPatternLength(pattern_length, Config.RQSIZE-1))
             hosts.add(domain)
@@ -103,7 +104,10 @@ class PatternRangeQuery(object):
                 for host in pad2_pattern:
                     padding[i].append(host)
             pattern_copy = {}
-            for element in DB.getRandomHostsByPatternLength(pattern_length, num_of_available_patterns):
+            for element in DB.getRandomHostsByPatternLength(pattern_length, num_of_available_patterns): 
+                # TODO: Currently, domain is not guaranteed to be added (rather, implied to be added by adding the max number of
+                # available hosts). This is why it sometimes goes wrong if I just decrement the number of available hosts.
+                # Solution: Add it manually and change getRandomHostsByPatternLength to include an optional blacklist of hosts.
                 pattern_copy[element] = DB.getPatternForHost(element).copy()
                 pattern_copy[element].remove(element)
                 block[0].add(element)
