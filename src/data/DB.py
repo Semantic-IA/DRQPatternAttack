@@ -32,7 +32,7 @@ def getRandomHosts(number):
     return sample(QUERIES, number)
 
 
-def getRandomHostsByPatternLength(size, number, blacklist=[]): # TODO: Perhaps convert blacklist to set?
+def getRandomHostsByPatternLength(size, number, blacklist=set([])):
     """Choose random Hostnames from the set of all Hostnames with a pattern with a specified length.
 
     @param size: The size of the pattern each hostname should have
@@ -45,10 +45,10 @@ def getRandomHostsByPatternLength(size, number, blacklist=[]): # TODO: Perhaps c
     if not number <= getNumberOfHostsWithPatternLength(size): 
         # TODO: Make sure the blacklist does not reduce this below "number"
         Error.printErrorAndExit("getRandomHostsByPatternLength: number must be <= number of available patterns, was " + str(number) + "/" + str(getNumberOfHostsWithPatternLength(size)))
-    return sample(SIZES[size], number)
+    return sample(SIZES[size] - blacklist, number)
 
 
-def getNumberOfHostsWithPatternLength(length):
+def getNumberOfHostsWithPatternLength(length, blacklist=set([])):
     """Get the number of hosts with a particular pattern length
 
     @param length: Pattern length
@@ -57,7 +57,7 @@ def getNumberOfHostsWithPatternLength(length):
     if not length > 0:
         Error.printErrorAndExit("getNumberOfHostsWithPatternLength: length must be > 0, was " + str(length))
     try:
-        return len(SIZES[length])
+        return len(SIZES[length] - blacklist)
     except KeyError:
         return 0
 
@@ -132,9 +132,9 @@ def addTarget(target, pattern):
     PATTERNS[target] = pattern
     length = len(pattern)
     try:
-        SIZES[length].append(target)
+        SIZES[length].add(target)
     except KeyError:
-        SIZES[length] = [target] # TODO: Perhaps convert SIZES-List to Set?
+        SIZES[length] = set([target])
     LENGTH[target] = length
     QUERIES.update(pattern)
     return
