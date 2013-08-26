@@ -101,6 +101,7 @@ def attackParallel(attackerInstance, generatorInstance, list_of_domains):
 
 
 def validateResults(attackResultDictionary):
+    print "Validating Results..."
     i = 0
     for domain in attackResultDictionary.keys():
         if domain not in attackResultDictionary[domain]:
