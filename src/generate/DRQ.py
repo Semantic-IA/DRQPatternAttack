@@ -64,6 +64,7 @@ class PatternRangeQuery(object):
         @param domain: Domain for which a DNS Range Query should be generated
         @return: List of Sets, in order, each set representing a query block
         """
+        #print domain
         if not DB.isValidTarget(domain):
             Error.printErrorAndExit(domain + " is not a valid target")
         pattern_length = len(DB.PATTERNS[domain])
