@@ -11,7 +11,7 @@ DRQPatternAttack is a simulator for the Pattern Attack on DNS Range Queries, as 
 
 @license:    To be determined
 
-@contact:    0maass@informatik.uni-hamburg.de (PGP Key ID: 3408825E, Fingerprint 84C4 8097 A3AF 7D55 189A  77AC 169F 9624 3408 825E)
+@contact:    max [aett] velcommuta.de (PGP Key ID: 3408825E, Fingerprint 84C4 8097 A3AF 7D55 189A  77AC 169F 9624 3408 825E)
 @deffield    updated: Updated
 '''
 # TODO: Überall "Aufrufmuster" => "Anfragemuster"
@@ -33,9 +33,9 @@ from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
 __all__ = []
-__version__ = '0.4.3'
+__version__ = '0.4.4'
 __date__ = '2013-03-15'
-__updated__ = '2013-08-06'
+__updated__ = '2013-08-26'
 
 
 class CLIError(Exception):
@@ -101,6 +101,7 @@ def attackParallel(attackerInstance, generatorInstance, list_of_domains):
 
 
 def validateResults(attackResultDictionary):
+    print "Validating Results..."
     i = 0
     for domain in attackResultDictionary.keys():
         if domain not in attackResultDictionary[domain]:

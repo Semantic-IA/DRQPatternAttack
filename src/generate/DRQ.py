@@ -68,10 +68,11 @@ class PatternRangeQuery(object):
             Error.printErrorAndExit(domain + " is not a valid target")
         pattern_length = len(DB.PATTERNS[domain])
         block = [set()]
-        num_of_available_patterns = DB.getNumberOfHostsWithPatternLength(pattern_length)
+        num_of_available_patterns = DB.getNumberOfHostsWithPatternLength(pattern_length) - 1
+        # TODO: currently, there is still the possibility of drawing the pattern of "domain" as a random pattern. Fix this.
         if num_of_available_patterns >= Config.RQSIZE:
-            hosts = set(DB.getRandomHostsByPatternLength(pattern_length, Config.RQSIZE-1))
-            hosts.add(domain)
+            hosts = set([domain])
+            hosts.update(set(DB.getRandomHostsByPatternLength(pattern_length, Config.RQSIZE-1, hosts)))
             pattern_copy = {}
             for host in hosts:
                 pattern_copy[host] = DB.getPatternForHost(host).copy()
@@ -82,16 +83,16 @@ class PatternRangeQuery(object):
                 for host in pattern_copy.keys():
                     block[i].add(pattern_copy[host].pop())
         else:  # TODO: Optimize this shit
-            num_of_needed_patterns = Config.RQSIZE - num_of_available_patterns
+            num_of_needed_patterns = Config.RQSIZE - (num_of_available_patterns+1)
             padding = []
             for i in range(num_of_needed_patterns):
                 pad1_len, pad2_len = self.getRandomNumbersWithSum(2, pattern_length)
-                while ((DB.getNumberOfHostsWithPatternLength(pad1_len) == 0)
+                while ((DB.getNumberOfHostsWithPatternLength(pad1_len, block[0]) == 0)
                         or (DB.getNumberOfHostsWithPatternLength(pad2_len) == 0)):
                     pad1_len, pad2_len = self.getRandomNumbersWithSum(2, pattern_length)
-                pad1_host = DB.getRandomHostsByPatternLength(pad1_len, 1)[0]
+                pad1_host = DB.getRandomHostsByPatternLength(pad1_len, 1, block[0])[0]
                 pad1_pattern = DB.getPatternForHost(pad1_host).copy()
-                pad1_pattern.remove(pad1_host)
+                pad1_pattern.remove(pad1_host) # TODO: Does this even make sense? It seems I am doing a lot of shuffling for nothing.
                 block[0].add(pad1_host)
                 padding.append([pad1_host])
                 for host in pad1_pattern:
@@ -103,7 +104,10 @@ class PatternRangeQuery(object):
                 for host in pad2_pattern:
                     padding[i].append(host)
             pattern_copy = {}
-            for element in DB.getRandomHostsByPatternLength(pattern_length, num_of_available_patterns):
+            block[0].add(domain)
+            pattern_copy[domain] = DB.getPatternForHost(domain).copy()
+            pattern_copy[domain].remove(domain)
+            for element in DB.getRandomHostsByPatternLength(pattern_length, num_of_available_patterns, block[0]):
                 pattern_copy[element] = DB.getPatternForHost(element).copy()
                 pattern_copy[element].remove(element)
                 block[0].add(element)
@@ -266,7 +270,8 @@ class PBRQ(Category):
             """Generate a Range Query with fully distinguishable blocks, meaning that each block contains exactly one
             element of the pattern, and len(list_of_blocks) == len(pattern).
 
-            Returned hostnames are unique [in a fashion to be decided, see TODO below].
+            Returned hostnames are unique within their respective blocks, but not guaranteed to be unique across multiple
+            blocks.
 
             @param domain: The domain name for which a range query should be constructed
             @return: A list of sets, each set representing a query block with one element from the pattern and at most
@@ -274,7 +279,6 @@ class PBRQ(Category):
                 and the set data type eleminating duplicates).
             @note: Compatible with FDBPattern
             """
-            # TODO: Check decisions for original FDBRQ function before implementing this
             block = PatternRangeQuery.generateBaseDRQ(self, domain)
             head = [block[0]]
             tail = block[1:]

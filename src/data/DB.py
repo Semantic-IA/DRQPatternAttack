@@ -32,21 +32,23 @@ def getRandomHosts(number):
     return sample(QUERIES, number)
 
 
-def getRandomHostsByPatternLength(size, number):
+def getRandomHostsByPatternLength(size, number, blacklist=set([])):
     """Choose random Hostnames from the set of all Hostnames with a pattern with a specified length.
 
     @param size: The size of the pattern each hostname should have
     @param number: The number of Hostnames that should be returned
+    @param blacklist: A [list/set]? of Domain Names that should not be considered when drawing the random hosts
     @return: A list of unique Hostnames (as strings)
 
     @requires: number <= len(SIZES[size])
     """
-    if not number <= getNumberOfHostsWithPatternLength(size):
+    if not number <= getNumberOfHostsWithPatternLength(size): 
+        # TODO: Make sure the blacklist does not reduce this below "number"
         Error.printErrorAndExit("getRandomHostsByPatternLength: number must be <= number of available patterns, was " + str(number) + "/" + str(getNumberOfHostsWithPatternLength(size)))
-    return sample(SIZES[size], number)
+    return sample(SIZES[size] - blacklist, number)
 
 
-def getNumberOfHostsWithPatternLength(length):
+def getNumberOfHostsWithPatternLength(length, blacklist=set([])):
     """Get the number of hosts with a particular pattern length
 
     @param length: Pattern length
@@ -55,7 +57,7 @@ def getNumberOfHostsWithPatternLength(length):
     if not length > 0:
         Error.printErrorAndExit("getNumberOfHostsWithPatternLength: length must be > 0, was " + str(length))
     try:
-        return len(SIZES[length])
+        return len(SIZES[length] - blacklist)
     except KeyError:
         return 0
 
@@ -123,15 +125,16 @@ def addTarget(target, pattern):
     @param target: hostname of the target (String)
     @param pattern: query pattern (set)
     """
+    # TODO: Convert asserts into if-blocks w/ Error.printErrorAndExit if something is wrong
     assert target != ""                 # Target not empty
     assert pattern != set([])           # Pattern not empty
     assert not isValidTarget(target)    # Target does not exist yet
     PATTERNS[target] = pattern
     length = len(pattern)
     try:
-        SIZES[length].append(target)
+        SIZES[length].add(target)
     except KeyError:
-        SIZES[length] = [target]
+        SIZES[length] = set([target])
     LENGTH[target] = length
     QUERIES.update(pattern)
     return
