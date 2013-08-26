@@ -64,7 +64,6 @@ class PatternRangeQuery(object):
         @param domain: Domain for which a DNS Range Query should be generated
         @return: List of Sets, in order, each set representing a query block
         """
-        #print domain
         if not DB.isValidTarget(domain):
             Error.printErrorAndExit(domain + " is not a valid target")
         pattern_length = len(DB.PATTERNS[domain])
@@ -84,7 +83,7 @@ class PatternRangeQuery(object):
                 for host in pattern_copy.keys():
                     block[i].add(pattern_copy[host].pop())
         else:  # TODO: Optimize this shit
-            num_of_needed_patterns = Config.RQSIZE - num_of_available_patterns
+            num_of_needed_patterns = Config.RQSIZE - (num_of_available_patterns+1)
             padding = []
             for i in range(num_of_needed_patterns):
                 pad1_len, pad2_len = self.getRandomNumbersWithSum(2, pattern_length)
@@ -93,7 +92,7 @@ class PatternRangeQuery(object):
                     pad1_len, pad2_len = self.getRandomNumbersWithSum(2, pattern_length)
                 pad1_host = DB.getRandomHostsByPatternLength(pad1_len, 1, block[0])[0]
                 pad1_pattern = DB.getPatternForHost(pad1_host).copy()
-                pad1_pattern.remove(pad1_host)
+                pad1_pattern.remove(pad1_host) # TODO: Does this even make sense? It seems I am doing a lot of shuffling for nothing.
                 block[0].add(pad1_host)
                 padding.append([pad1_host])
                 for host in pad1_pattern:
@@ -105,16 +104,13 @@ class PatternRangeQuery(object):
                 for host in pad2_pattern:
                     padding[i].append(host)
             pattern_copy = {}
-            for element in DB.getRandomHostsByPatternLength(pattern_length, num_of_available_patterns):
-                # TODO: Currently, domain is not guaranteed to be added (rather, implied to be added by adding the max number of
-                # available hosts). This is why it sometimes goes wrong if I just decrement the number of available hosts.
-                # Solution: Add it manually and change getRandomHostsByPatternLength to include an optional blacklist of hosts.
-                pattern_copy[element] = DB.getPatternForHost(element).copy()
-                pattern_copy[element].remove(element)
-                block[0].add(element)
             block[0].add(domain)
             pattern_copy[domain] = DB.getPatternForHost(domain).copy()
             pattern_copy[domain].remove(domain)
+            for element in DB.getRandomHostsByPatternLength(pattern_length, num_of_available_patterns, block[0]):
+                pattern_copy[element] = DB.getPatternForHost(element).copy()
+                pattern_copy[element].remove(element)
+                block[0].add(element)
             for i in range(1, pattern_length, 1):
                 block.append(set())
                 for host in pattern_copy.keys():
