@@ -32,23 +32,49 @@ def getRandomHosts(number):
     return sample(QUERIES, number)
 
 
-def getRandomHostsByPatternLength(size, number, blacklist=set([])):
+def getRandomHostsByPatternLengthB(size, number, blacklist=set([])):
+    """Choose random Hostnames from the set of all Hostnames with a pattern with a specified length, excluding a Blacklist.
+
+    @param size: The size of the pattern each hostname should have
+    @param number: The number of Hostnames that should be returned
+    @param blacklist: A set of Domain Names that should not be considered when drawing the random hosts
+    @return: A list of unique Hostnames (as strings)
+
+    @requires: number <= len(SIZES[size]-blacklist)
+    """
+    if not number <= getNumberOfHostsWithPatternLengthB(size, blacklist):
+        Error.printErrorAndExit("getRandomHostsByPatternLength: number must be <= number of available patterns, was " + str(number) + "/" + str(getNumberOfHostsWithPatternLengthB(size, blacklist)))
+    return sample(SIZES[size] - blacklist, number)
+
+def getRandomHostsByPatternLength(size, number):
     """Choose random Hostnames from the set of all Hostnames with a pattern with a specified length.
 
     @param size: The size of the pattern each hostname should have
     @param number: The number of Hostnames that should be returned
-    @param blacklist: A [list/set]? of Domain Names that should not be considered when drawing the random hosts
     @return: A list of unique Hostnames (as strings)
 
     @requires: number <= len(SIZES[size])
     """
-    if not number <= getNumberOfHostsWithPatternLength(size): 
-        # TODO: Make sure the blacklist does not reduce this below "number"
+    if not number <= getNumberOfHostsWithPatternLength(size):
         Error.printErrorAndExit("getRandomHostsByPatternLength: number must be <= number of available patterns, was " + str(number) + "/" + str(getNumberOfHostsWithPatternLength(size)))
-    return sample(SIZES[size] - blacklist, number)
+    return sample(SIZES[size], number)
 
 
-def getNumberOfHostsWithPatternLength(length, blacklist=set([])):
+def getNumberOfHostsWithPatternLengthB(length, blacklist=set([])):
+    """Get the number of hosts with a particular pattern length, excluding a Blacklist
+
+    @param length: Pattern length
+    @param blacklist: Set of Hostnames that should not be considered
+    @return: Number of hosts with that pattern length
+    """
+    if not length > 0:
+        Error.printErrorAndExit("getNumberOfHostsWithPatternLengthB: length must be > 0, was " + str(length))
+    try:
+        return len(SIZES[length] - blacklist)
+    except KeyError:
+        return 0
+
+def getNumberOfHostsWithPatternLength(length):
     """Get the number of hosts with a particular pattern length
 
     @param length: Pattern length
@@ -57,10 +83,9 @@ def getNumberOfHostsWithPatternLength(length, blacklist=set([])):
     if not length > 0:
         Error.printErrorAndExit("getNumberOfHostsWithPatternLength: length must be > 0, was " + str(length))
     try:
-        return len(SIZES[length] - blacklist)
+        return len(SIZES[length])
     except KeyError:
         return 0
-
 
 def isValidTarget(host):
     """Check if the provided hostname is a valid target (meaning a pattern exists for it).

@@ -58,9 +58,6 @@ class PatternRangeQuery(object):
         Queries are unique inside their respective sets, but may appear more than once across different
         query blocks.
 
-        At the moment, it is not guaranteed that Config.RQSIZE different patterns are returned, but the only
-        alternative is Config.RQSIZE-1 different patterns, which is acceptable.
-
         @param domain: Domain for which a DNS Range Query should be generated
         @return: List of Sets, in order, each set representing a query block
         """
@@ -69,10 +66,9 @@ class PatternRangeQuery(object):
         pattern_length = len(DB.PATTERNS[domain])
         block = [set()]
         num_of_available_patterns = DB.getNumberOfHostsWithPatternLength(pattern_length) - 1
-        # TODO: currently, there is still the possibility of drawing the pattern of "domain" as a random pattern. Fix this.
         if num_of_available_patterns >= Config.RQSIZE:
             hosts = set([domain])
-            hosts.update(set(DB.getRandomHostsByPatternLength(pattern_length, Config.RQSIZE-1, hosts)))
+            hosts.update(set(DB.getRandomHostsByPatternLengthB(pattern_length, Config.RQSIZE-1, hosts)))
             pattern_copy = {}
             for host in hosts:
                 pattern_copy[host] = DB.getPatternForHost(host).copy()
@@ -87,10 +83,10 @@ class PatternRangeQuery(object):
             padding = []
             for i in range(num_of_needed_patterns):
                 pad1_len, pad2_len = self.getRandomNumbersWithSum(2, pattern_length)
-                while ((DB.getNumberOfHostsWithPatternLength(pad1_len, block[0]) == 0)
+                while ((DB.getNumberOfHostsWithPatternLengthB(pad1_len, block[0]) == 0)
                         or (DB.getNumberOfHostsWithPatternLength(pad2_len) == 0)):
                     pad1_len, pad2_len = self.getRandomNumbersWithSum(2, pattern_length)
-                pad1_host = DB.getRandomHostsByPatternLength(pad1_len, 1, block[0])[0]
+                pad1_host = DB.getRandomHostsByPatternLengthB(pad1_len, 1, block[0])[0]
                 pad1_pattern = DB.getPatternForHost(pad1_host).copy()
                 pad1_pattern.remove(pad1_host) # TODO: Does this even make sense? It seems I am doing a lot of shuffling for nothing.
                 block[0].add(pad1_host)
@@ -107,7 +103,7 @@ class PatternRangeQuery(object):
             block[0].add(domain)
             pattern_copy[domain] = DB.getPatternForHost(domain).copy()
             pattern_copy[domain].remove(domain)
-            for element in DB.getRandomHostsByPatternLength(pattern_length, num_of_available_patterns, block[0]):
+            for element in DB.getRandomHostsByPatternLengthB(pattern_length, num_of_available_patterns, block[0]):
                 pattern_copy[element] = DB.getPatternForHost(element).copy()
                 pattern_copy[element].remove(element)
                 block[0].add(element)
