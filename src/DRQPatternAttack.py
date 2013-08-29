@@ -17,6 +17,7 @@ DRQPatternAttack is a simulator for the Pattern Attack on DNS Range Queries, as 
 # TODO: Überall "Aufrufmuster" => "Anfragemuster"
 # TODO: Resultate des Angreifers direkt validieren, nicht erst am Ende (crash early)
 # TODO: Seed für RNG anzeigen und per param übergeben lassen
+# TODO: Docstrings
 
 import sys
 import os
@@ -120,6 +121,10 @@ def validateResults(attackResultDictionary):
 
 
 def generateStats(attackResultDictionary):
+    # We still need to generate a bunch of additional stats:
+    # TODO: Perhaps just output a matlab-matrix of the raw data (pattern length, # of results, ...)?
+    # That allows us to do all the magic in matlab, and to add additional measures without 
+    # re-running the simulator
     returnValue = {}
     for domain in attackResultDictionary.keys():
         pattern_length = data.DB.getPatternLengthForHost(domain)
