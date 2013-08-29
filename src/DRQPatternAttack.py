@@ -50,8 +50,14 @@ class CLIError(Exception):
     def __unicode__(self):
         return self.msg
 
-
 def getGeneratorFor(genID):
+    """Generator selector
+
+    Resolves a GeneratorID to the matching generator.
+
+    @param genID: The ID of the Generator
+    @return: A Reference to the type of Generator (that can be directly initialized, if needed)
+    """
     generators = {1: generate.DRQ.BRQ().NDBRQ,
                   2: generate.DRQ.BRQ().DFBRQ,
                   3: generate.DRQ.BRQ().FDBRQ,
@@ -62,6 +68,13 @@ def getGeneratorFor(genID):
 
 
 def getAttackerFor(attID):
+    """Attacker selector
+
+    Resolves an AttackerID to the matching attacker.
+
+    @param attID: The ID of the attacker
+    @return: A Reference to the type of Attacker (that can be directly initialized, if needed)
+    """
     attackers = {1: attacker.Pattern.NDBPattern,
                  2: attacker.Pattern.DFBPatternBRQ,
                  3: attacker.Pattern.FDBPattern,
@@ -72,21 +85,54 @@ def getAttackerFor(attID):
 
 
 def chooseTargets(number_of_targets):
+    """Choose a number of random targets
+
+    This function will choose number_of_targets random patterns to be attacked.
+
+    @param number_of_targets: The number of targets to be returned.
+    @return: A list of targets
+    """
+    # TODO: Currently not unique. Change?
     returnValue = []
     for i in range(number_of_targets):
         returnValue.append(data.DB.getRandomTarget())
     return returnValue
 
 
-def attack(attackInstance, inputValue):
-    return attackInstance().attack(inputValue)
-
-
 def generateFor(generatorInstance, domain):
+    """Generate a range Query
+
+    Generates a range Query for the provided domain using the provided, uninitialized generatorInstance
+
+    @param generatorInstance: An uninitialized Generator, as returned by getGeneratorFor(genID)
+    @param domain: The domain the generator should generate a range query for.
+    @return: The result of the generator.
+    """
     return generatorInstance().generateDRQFor(domain)
 
 
+def attack(attackInstance, inputValue):
+    """Start an attack
+
+    Attack a provided inputValue using the provided, uninitialized attackInstance.
+
+    @param attackInstance: An uninitialized attacker, as returned by getAttackerFor(attID).
+    @param inputValue: A valid input value for said attacker.
+    @return: The results of the attack.
+    """
+    return attackInstance().attack(inputValue)
+
+
 def attackList(attackerInstance, generatorInstance, list_of_domains):
+    """Attack a list of targets
+
+    Generate range queries for a list of domains and attack them using the provided attackerInstance.
+
+    @param attackerInstance: An uninitialized Attacker, as returned by getAttackerFor(attID)
+    @param generatorInstance: An uninitialized Generator, as returned by getGeneratorFor(genID)
+    @param list_of_domains: A list of Domains, as returned by chooseTargets(number_of_targets)
+    @return: A Dictionary, mapping domains to the results of the attackers.
+    """
     stat = util.Progress.Bar(len(list_of_domains), "=")
     returnValue = {}
     for domain in list_of_domains:
@@ -96,11 +142,29 @@ def attackList(attackerInstance, generatorInstance, list_of_domains):
 
 
 def attackParallel(attackerInstance, generatorInstance, list_of_domains):
+    """Attack a list of targets using multiple threads
+
+    Parallelize the generation and attacking of a list of domains using multiple threads.
+    Delegates all work to the util.Parallel module.
+
+    @param attackerInstance: An uninitialized Attacker, as returned by getAttackerFor(attID)
+    @param generatorInstance: An uninitialized Generator, as returned by getGeneratorFor(genID)
+    @param list_of_domains: A list of Domains, as returned by chooseTargets(number_of_targets)
+    @return: The result of the util.Parallel.parallelize function (a dictionary, similar to attackList)
+    """
     stat = util.Progress.Bar(len(list_of_domains), "=")
     return util.Parallel.parallelize(attackerInstance, generatorInstance, list_of_domains, stat)
 
 
 def validateResults(attackResultDictionary):
+    """Validate results
+
+    Validated the results of a finished attack, checking if the correct Domain is included in the results.
+
+    @param attackResultDictionary: A result dictionary, as returned by attackList or attackParallel
+    @return True if the correct result was always found, terminates program otherwise.
+    """
+    # TODO: Change this to not kill the program on missing result, but give a message.
     print "Validating Results..."
     i = 0
     for domain in attackResultDictionary.keys():
@@ -120,6 +184,13 @@ def validateResults(attackResultDictionary):
 
 
 def generateStats(attackResultDictionary):
+    """Generate stats
+
+    Generate a set of statistics for a provided attackResultDictionary
+
+    @param attackResultDictionary: A result Dictionary, as returned by attackList or attackParallel
+    @return: A stat dictionary
+    """
     returnValue = {}
     for domain in attackResultDictionary.keys():
         pattern_length = data.DB.getPatternLengthForHost(domain)
@@ -134,6 +205,12 @@ def generateStats(attackResultDictionary):
 
 
 def printStats(statDictionary):
+    """Print stats
+
+    Print the results of generateStats in a matlab-friendly format.
+
+    @param statDictionary: A stat dictionary, as returned by generateStats
+    """
     output1 = "results = ["
     output2 = "samples = ["
     for i in range(1, max(statDictionary.keys())+1, 1):
@@ -150,7 +227,10 @@ def printStats(statDictionary):
 
 
 def main(argv=None):  # IGNORE:C0111
-    '''Command line options.'''
+    """Main function
+
+    Parses CLI options and calls the other functions in order.
+    """
 
     if argv is None:
         argv = sys.argv
