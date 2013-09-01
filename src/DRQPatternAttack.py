@@ -310,8 +310,9 @@ def main(argv=None):  # IGNORE:C0111
             attackResult = attackParallel(attackerInstance, generatorInstance, target_list)
         else:
             attackResult = attackList(attackerInstance, generatorInstance, target_list)
-        if not validateResults(attackResult): # TODO: In --stat mode, for the final version, this function will be redundant and should be commented out.
-            util.Error.printErrorAndExit("Something went wrong. Exiting!")
+        if not Config.STAT:
+            if not validateResults(attackResult):
+                util.Error.printErrorAndExit("Something went wrong. Exiting!")
         if Config.STAT or Config.VERBOSE:
             statResult = generateStats(attackResult)
             printStats(statResult)
