@@ -14,9 +14,6 @@ DRQPatternAttack is a simulator for the Pattern Attack on DNS Range Queries, as 
 @contact:    max [aett] velcommuta.de (PGP Key ID: 3408825E, Fingerprint 84C4 8097 A3AF 7D55 189A  77AC 169F 9624 3408 825E)
 @deffield    updated: Updated
 '''
-# TODO: Überall "Aufrufmuster" => "Anfragemuster"
-# TODO: Resultate des Angreifers direkt validieren, nicht erst am Ende (crash early)
-# TODO: Seed für RNG anzeigen und per param übergeben lassen
 
 import sys
 import os
@@ -164,11 +161,10 @@ def validateResults(attackResultDictionary):
     @param attackResultDictionary: A result dictionary, as returned by attackList or attackParallel
     @return True if the correct result was always found, terminates program otherwise.
     """
-    # TODO: Change this to not kill the program on missing result, but give a message.
     print "Validating Results..."
     i = 0
-    for domain in attackResultDictionary.keys():
-        if domain not in attackResultDictionary[domain]:
+    for domain in attackResultDictionary:
+        if domain not in attackResultDictionary[domain]: # TODO: Change this to not kill the program on missing result, but give a message.
             sys.stderr.write("ERROR: " + domain + " not in results\n")
             sys.stderr.write("       Previously checked " + str(i) + " correct results.\n")
             sys.stderr.flush()
@@ -189,21 +185,19 @@ def generateStats(attackResultDictionary):
     Generate a set of statistics for a provided attackResultDictionary
 
     @param attackResultDictionary: A result Dictionary, as returned by attackList or attackParallel
-    @return: A stat dictionary
+    @return: A stat dictionary, mapping each result as a column of a matrix [length, number of results, number of correct results]
     """
-    # We still need to generate a bunch of additional stats:
-    # TODO: Perhaps just output a matlab-matrix of the raw data (pattern length, # of results, ...)?
-    # That allows us to do all the magic in matlab, and to add additional measures without 
-    # re-running the simulator
     returnValue = {}
-    for domain in attackResultDictionary.keys():
+    for domain in attackResultDictionary:
         pattern_length = data.DB.getPatternLengthForHost(domain)
-        if pattern_length in returnValue:
-            returnValue[pattern_length]["sum"] += len(attackResultDictionary[domain])
+        try:
+            returnValue[pattern_length]["values"].append(len(attackResultDictionary[domain]))
+            returnValue[pattern_length]["correct"].append(domain in attackResultDictionary[domain])
             returnValue[pattern_length]["num"] += 1
-        else:
+        except KeyError:
             returnValue[pattern_length] = {}
-            returnValue[pattern_length]["sum"] = len(attackResultDictionary[domain])
+            returnValue[pattern_length]["values"] = [len(attackResultDictionary[domain])]
+            returnValue[pattern_length]["correct"] = [domain in attackResultDictionary[domain]]
             returnValue[pattern_length]["num"] = 1
     return returnValue
 
@@ -215,19 +209,22 @@ def printStats(statDictionary):
 
     @param statDictionary: A stat dictionary, as returned by generateStats
     """
-    output1 = "results = ["
-    output2 = "samples = ["
-    for i in range(1, max(statDictionary.keys())+1, 1):
+    output = "results = [" 
+    # TODO: Change name to something that identifies all relevant information about the run.
+    # At least: Block Size, # of patterns in database.
+    # TODO: Think about that some more once the changeable parts are determined.
+    for i in range(1, max(statDictionary)+1, 1):
         try:
-            output1 += (str(statDictionary[i]["sum"] / float(statDictionary[i]["num"])) + " ")
-            output2 += (str(statDictionary[i]["num"]) + " ")
+            for j in range(len(statDictionary[i]["values"])):
+                output += str(i) + ", " + str(statDictionary[i]["values"][j]) + ", "
+                if statDictionary[i]["correct"][j]:
+                    output += str(1) + "; "
+                else:
+                    output += str(0) + "; "
         except KeyError:
-            output1 += "0 "
-            output2 += "0 "
-    output1 += "];"
-    output2 += "];"
-    print output1
-    print output2
+            output += "0, 0, 0; "
+    output = output[:-2] + "];"
+    print output
 
 
 def main(argv=None):  # IGNORE:C0111
@@ -235,7 +232,6 @@ def main(argv=None):  # IGNORE:C0111
 
     Parses CLI options and calls the other functions in order.
     """
-
     if argv is None:
         argv = sys.argv
     else:
@@ -274,6 +270,8 @@ def main(argv=None):  # IGNORE:C0111
         group2.add_argument('--all', dest="attack_all", action="store_true", help="Attack all possible targets (may take a long time). Implies -q, --stat")
         parser.add_argument("file", help="select pattern file.")
         # TODO: Add Argument for Benchmark mode? Time execution of attack and give stats for that as well?
+        # TODO: Add Parameters to determine dataset sizes (for variation in stat collection)
+        # Also change thesis once this is implemented.
 
         # Process arguments
         args = parser.parse_args()
@@ -312,7 +310,7 @@ def main(argv=None):  # IGNORE:C0111
             attackResult = attackParallel(attackerInstance, generatorInstance, target_list)
         else:
             attackResult = attackList(attackerInstance, generatorInstance, target_list)
-        if not validateResults(attackResult):
+        if not validateResults(attackResult): # TODO: In --stat mode, for the final version, this function will be redundant and should be commented out.
             util.Error.printErrorAndExit("Something went wrong. Exiting!")
         if Config.STAT or Config.VERBOSE:
             statResult = generateStats(attackResult)
