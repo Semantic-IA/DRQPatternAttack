@@ -9,7 +9,11 @@ PATTERNS = {}
 QUERIES = set()
 SIZES = {}
 LENGTH = {}
-
+# Formats of the dictionaries:
+# PATTERNS[target_domain] = Pattern_as_list
+# QUERIES = set(all_known_queries)
+# SIZES[length] = list_of_domains_with_pattern_length
+# LENGTH[domain] = length_of_domain_pattern
 
 def getRandomTarget(database=PATTERNS):
     """Choose random Host from the list of possible targets
