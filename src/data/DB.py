@@ -16,6 +16,7 @@ def getRandomTarget(database=PATTERNS):
 
     The List of possible targets is the set of keys of the PATTERNS Dictionary.
 
+    @param database: The database to be used.
     @return: A Hostname for which a pattern is known, as a string
     """
     return choice(database.keys())
@@ -25,6 +26,7 @@ def getRandomHosts(number, database=QUERIES):
     """Choose random Hostnames from the set of all known hostnames
 
     @param number: Number of Hostnames to return
+    @param database: The database to be used.
     @return: A list of unique hostnames (as strings)
     """
     if not number > 0:
@@ -38,6 +40,7 @@ def getRandomHostsByPatternLengthB(size, number, blacklist=set([]), database=SIZ
     @param size: The size of the pattern each hostname should have
     @param number: The number of Hostnames that should be returned
     @param blacklist: A set of Domain Names that should not be considered when drawing the random hosts
+    @param database: The database to be used.
     @return: A list of unique Hostnames (as strings)
 
     @requires: number <= len(SIZES[size]-blacklist)
@@ -51,6 +54,7 @@ def getRandomHostsByPatternLength(size, number, database=SIZES):
 
     @param size: The size of the pattern each hostname should have
     @param number: The number of Hostnames that should be returned
+    @param database: The database to be used.
     @return: A list of unique Hostnames (as strings)
 
     @requires: number <= len(SIZES[size])
@@ -65,6 +69,7 @@ def getNumberOfHostsWithPatternLengthB(length, blacklist=set([]), database=SIZES
 
     @param length: Pattern length
     @param blacklist: Set of Hostnames that should not be considered
+    @param database: The database to be used.
     @return: Number of hosts with that pattern length
     """
     if not length > 0:
@@ -78,6 +83,7 @@ def getNumberOfHostsWithPatternLength(length, database=SIZES):
     """Get the number of hosts with a particular pattern length
 
     @param length: Pattern length
+    @param database: The database to be used.
     @return: Number of hosts with that pattern length
     """
     if not length > 0:
@@ -91,7 +97,7 @@ def isValidTarget(host):
     """Check if the provided hostname is a valid target (meaning a pattern exists for it).
 
     @param host: The hostname
-    @return: True or False
+    @return: True (if the target is valid) or False (otherwise)
     """
     try:
         PATTERNS[host]
@@ -125,6 +131,7 @@ def getPatternLengthForHost(host):
 def getAllPossibleTargets(database=PATTERNS):
     """Get a list of all targets that have a pattern associated with them
 
+    @param database: The database to be used.
     @return: List of targets
     """
     return database.keys()
@@ -134,6 +141,7 @@ def getAllTargetsWithLength(length, database=SIZES):
     """Get a list of all targets whose patterns have a specific length
 
     @param length: The length
+    @param database: The database to be used.
     @return: A list of possible Targets
     """
     if not length > 0:
