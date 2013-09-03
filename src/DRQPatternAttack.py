@@ -164,7 +164,7 @@ def validateResults(attackResultDictionary):
     print "Validating Results..."
     i = 0
     for domain in attackResultDictionary:
-        if domain not in attackResultDictionary[domain]: # TODO: Change this to not kill the program on missing result, but give a message.
+        if domain not in attackResultDictionary[domain]:
             sys.stderr.write("ERROR: " + domain + " not in results\n")
             sys.stderr.write("       Previously checked " + str(i) + " correct results.\n")
             sys.stderr.flush()
@@ -180,52 +180,67 @@ def validateResults(attackResultDictionary):
 
 
 def generateStats(attackResultDictionary):
+    # TODO: Rework Docstring, currently horrible wording
     """Generate stats
 
     Generate a set of statistics for a provided attackResultDictionary
 
     @param attackResultDictionary: A result Dictionary, as returned by attackList or attackParallel
-    @return: A stat dictionary, mapping each result as a column of a matrix [length, number of results, number of correct results]
+    @return: Two dictionaries, showing the number of patterns with a specific number of results
     """
-    returnValue = {}
+    seperateSum = {}
+    overallSum = {}
     for domain in attackResultDictionary:
         pattern_length = data.DB.getPatternLengthForHost(domain)
+        ard_len = len(attackResultDictionary[domain])
         try:
-            returnValue[pattern_length]["values"].append(len(attackResultDictionary[domain]))
-            returnValue[pattern_length]["correct"].append(domain in attackResultDictionary[domain])
-            returnValue[pattern_length]["num"] += 1
+            seperateSum[pattern_length]
         except KeyError:
-            returnValue[pattern_length] = {}
-            returnValue[pattern_length]["values"] = [len(attackResultDictionary[domain])]
-            returnValue[pattern_length]["correct"] = [domain in attackResultDictionary[domain]]
-            returnValue[pattern_length]["num"] = 1
-    return returnValue
+            seperateSum[pattern_length] = {}
+        try:
+            seperateSum[pattern_length][ard_len] += 1
+        except KeyError:
+            seperateSum[pattern_length][ard_len] = 1
+        try:
+            overallSum[ard_len] += 1
+        except KeyError:
+            overallSum[ard_len] = 1
+    # Currently, we only have regular stats. They will be converted to cumulative stats in the next step
+    return seperateSum, overallSum
 
 
-def printStats(statDictionary):
+def printStats(seperateSum, overallSum):
+    # TODO: Update Docstring
     """Print stats
 
     Print the results of generateStats in a matlab-friendly format.
 
-    @param statDictionary: A stat dictionary, as returned by generateStats
+    @param seperateSum: TODO
+    @param overallSum: TODO
     """
-    output = "results = [" 
-    # TODO: Change name to something that identifies all relevant information about the run.
-    # At least: Block Size, # of patterns in database.
-    # TODO: Think about that some more once the changeable parts are determined.
-    for i in range(1, max(statDictionary)+1, 1):
-        try:
-            for j in range(len(statDictionary[i]["values"])):
-                output += str(i) + ", " + str(statDictionary[i]["values"][j]) + ", "
-                if statDictionary[i]["correct"][j]:
-                    output += str(1) + "; "
-                else:
-                    output += str(0) + "; "
-        except KeyError:
-            output += "0, 0, 0; "
-    output = output[:-2] + "];"
-    print output
-
+    filename = "m-" + str(Config.MODENUM) + "-N-" + str(Config.RQSIZE) + "-S-" + "XXX" + "-M-" + "ALL" + ".txt" # TODO: Change this once the parameter to vary the sets is implemented
+    with open(filename, "w") as fo:
+        fo.write("# Statistics for m=%i, N=%i, S=%s, all M\n" % (Config.MODENUM, Config.RQSIZE, "XXX")) # TODO: Change this (incl. %s) once the parameter to vary the sets is implemented
+        fo.write("# k-definiteness count\n")
+        vSum = 0
+        for i in range(1, max(overallSum)+1, 1):
+            try:
+                vSum += overallSum[i]
+            except KeyError:
+                pass
+            fo.write("%i %i\n" % (i, vSum))
+    for k in seperateSum:
+        filename = "m-" + str(Config.MODENUM) + "-N-" + str(Config.RQSIZE) + "-S-" + "XXX" + "-M-" + str(k) + ".txt" # TODO: Change this once the parameter to vary the sets is implemented
+        with open(filename, "w") as fo:
+            fo.write("# Statistics for m=%i, N=%i, S=%s, M=%i\n" % (Config.MODENUM, Config.RQSIZE, "XXX", k)) # TODO: Change this (incl %s) once the parameter to vary the sets is implemented
+            fo.write("# k-definiteness count\n")
+            vSum = 0
+            for i in range(1, max(seperateSum[k])+1, 1):
+                try:
+                    vSum += seperateSum[k][i]
+                except KeyError:
+                    pass
+                fo.write("%i %i\n" % (i, vSum))
 
 def main(argv=None):  # IGNORE:C0111
     """Main function
@@ -281,6 +296,7 @@ def main(argv=None):  # IGNORE:C0111
         Config.RQSIZE = args.num
         Config.STAT = args.stat
         Config.THREADS = args.threads
+        Config.MODENUM = args.mode
         if args.attack_all:
             Config.STAT = True
             Config.VERBOSE = False
@@ -314,8 +330,8 @@ def main(argv=None):  # IGNORE:C0111
             if not validateResults(attackResult):
                 util.Error.printErrorAndExit("Something went wrong. Exiting!")
         if Config.STAT or Config.VERBOSE:
-            statResult = generateStats(attackResult)
-            printStats(statResult)
+            seperateSum, overallSum = generateStats(attackResult)
+            printStats(seperateSum, overallSum)
         return 0
 
     except KeyboardInterrupt:
