@@ -1,5 +1,7 @@
 *.py[cod]
 
+# Output files
+*_output
 # Sublime Text
 *.sublime-project
 *.sublime-workspace

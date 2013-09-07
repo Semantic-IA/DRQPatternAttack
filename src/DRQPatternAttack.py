@@ -25,6 +25,7 @@ import data.DB              # Database
 import util.Progress        # Progress Bar
 import util.Error           # Error logging
 import util.Parallel        # Parallel Processing
+import util.FileManagement  # File Management for stat output
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
@@ -224,21 +225,14 @@ def printStats(seperateSum, overallSum):
     @param overallSum: A statistics dictionary where overallSum[num_of_attack_results] contains the number of results of attacks on
         Patterns of any length that returned num_of_attack_results results.
     """
-    # TODO: Save files to subfolders to make it more structured?
-    filename = "m-" + str(Config.MODENUM) + "-N-" + str(Config.RQSIZE) + "-S-" + "XXX" + "-M-" + "ALL" + ".txt" # TODO: Change this once the parameter to vary the sets is implemented
-    with open(filename, "w") as fo:
-        fo.write("# Statistics for m=%i, N=%i, S=%s, all M\n" % (Config.MODENUM, Config.RQSIZE, "XXX")) # TODO: Change this (incl. %s) once the parameter to vary the sets is implemented
-        fo.write("# k-definiteness count\n")
+    with util.FileManagement.openStatFile(0) as fo:
         for i in range(1, max(overallSum)+1, 1):
             try:
                 fo.write("%i %i\n" % (i, overallSum[i]))
             except KeyError:
                 fo.write("%i %i\n" % (i, 0))
     for k in seperateSum:
-        filename = "m-" + str(Config.MODENUM) + "-N-" + str(Config.RQSIZE) + "-S-" + "XXX" + "-M-" + str(k) + ".txt" # TODO: Change this once the parameter to vary the sets is implemented
-        with open(filename, "w") as fo:
-            fo.write("# Statistics for m=%i, N=%i, S=%s, M=%i\n" % (Config.MODENUM, Config.RQSIZE, "XXX", k)) # TODO: Change this (incl %s) once the parameter to vary the sets is implemented
-            fo.write("# k-definiteness count\n")
+        with util.FileManagement.openStatFile(k) as fo:
             for i in range(1, max(seperateSum[k])+1, 1):
                 try:
                     fo.write("%i %i\n" % (i, seperateSum[k][i]))
