@@ -205,7 +205,6 @@ def generateStats(attackResultDictionary):
             overallSum[ard_len] += 1
         except KeyError:
             overallSum[ard_len] = 1
-    # Currently, we only have regular stats. They will be converted to cumulative stats in the next step
     return seperateSum, overallSum
 
 
@@ -216,7 +215,9 @@ def printStats(seperateSum, overallSum):
     (used mode, Block Size, database size, in some cases pattern length of patterns relevant to this file) about the run.
 
     One file is generated that contains the statistics aggregated over all pattern lengths. Another file is generated for each pattern
-    length that has occured, containing stats of patterns of that length. 
+    length that has occured, containing stats of patterns of that length.
+
+    The statistics are in a GnuPlot-compatible format and not cumulative.
 
     @param seperateSum: A statistics dictionary where seperateSum[pattern_length][num_of_attack_results] contains the number of results
         of attacks on Patterns of the length pattern_length that returned num_of_attack_results results.
@@ -228,25 +229,21 @@ def printStats(seperateSum, overallSum):
     with open(filename, "w") as fo:
         fo.write("# Statistics for m=%i, N=%i, S=%s, all M\n" % (Config.MODENUM, Config.RQSIZE, "XXX")) # TODO: Change this (incl. %s) once the parameter to vary the sets is implemented
         fo.write("# k-definiteness count\n")
-        vSum = 0
         for i in range(1, max(overallSum)+1, 1):
             try:
-                vSum += overallSum[i]
+                fo.write("%i %i\n" % (i, overallSum[i]))
             except KeyError:
-                pass
-            fo.write("%i %i\n" % (i, vSum))
+                fo.write("%i %i\n" % (i, 0))
     for k in seperateSum:
         filename = "m-" + str(Config.MODENUM) + "-N-" + str(Config.RQSIZE) + "-S-" + "XXX" + "-M-" + str(k) + ".txt" # TODO: Change this once the parameter to vary the sets is implemented
         with open(filename, "w") as fo:
             fo.write("# Statistics for m=%i, N=%i, S=%s, M=%i\n" % (Config.MODENUM, Config.RQSIZE, "XXX", k)) # TODO: Change this (incl %s) once the parameter to vary the sets is implemented
             fo.write("# k-definiteness count\n")
-            vSum = 0
             for i in range(1, max(seperateSum[k])+1, 1):
                 try:
-                    vSum += seperateSum[k][i]
+                    fo.write("%i %i\n" % (i, seperateSum[k][i]))
                 except KeyError:
-                    pass
-                fo.write("%i %i\n" % (i, vSum))
+                    fo.write("%i %i\n" % (i, 0))
 
 
 def main(argv=None):  # IGNORE:C0111
