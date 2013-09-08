@@ -76,7 +76,7 @@ class PatternRangeQuery(object):
                 block[0].add(host)
             for i in range(1, pattern_length, 1):
                 block.append(set())
-                for host in pattern_copy.keys():
+                for host in pattern_copy:
                     block[i].add(pattern_copy[host].pop())
         else:  # TODO: Optimize this shit
             num_of_needed_patterns = Config.RQSIZE - (num_of_available_patterns+1)
@@ -109,7 +109,7 @@ class PatternRangeQuery(object):
                 block[0].add(element)
             for i in range(1, pattern_length, 1):
                 block.append(set())
-                for host in pattern_copy.keys():
+                for host in pattern_copy:
                     block[i].add(pattern_copy[host].pop())
                 for pattern in padding:
                     block[i].add(pattern[i])
