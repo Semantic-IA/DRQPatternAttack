@@ -40,7 +40,14 @@ def createDatabasePartition(size):
     @return: The number of queries QUERIES_C actually contains in the end.
     """
     # TODO: Duplicate handling?
-    pass
+    # TODO: Deterministic oder non-deterministic?
+    if size == -1:
+        PATTERNS_C.update(PATTERNS)
+        QUERIES_C.update(QUERIES)
+        SIZES_C.update(SIZES)
+        return len(QUERIES_C)
+    else:
+        Error.printErrorAndExit("createDatabasePartition: Unimplemented for size=" + str(size))
 
 
 def getRandomTarget():

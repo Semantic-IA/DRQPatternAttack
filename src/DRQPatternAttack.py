@@ -277,13 +277,13 @@ def main(argv=None):  # IGNORE:C0111
         parser.add_argument('--version', action='version', version=program_version_message)
         parser.add_argument('-s', '--size', dest="num", help="Size of the range query [default %(default)s]", default="50", type=int)
         parser.add_argument('-c', '--count', dest="cnt", help="Number of random targets to be tried [default %(default)s]", default="50", type=int)
+        parser.add_argument('-p', '--partition', dest="partition", help="Number of Queries the Client should be allowed to use [default %(default)s for all]", default="-1", type=int)
         parser.add_argument('-t', '--threads', dest="threads", help="Number of Threads used for processing [default %(default)s]", default="1", type=int)
         parser.add_argument('--stat', dest="stat", help="Show statistics about the accuracy of the algorithm", action="store_true")
         group2 = parser.add_mutually_exclusive_group()
         group2.add_argument('--target', dest="target", metavar="url", help="Attack this domain", type=str, default="")
         group2.add_argument('--all', dest="attack_all", action="store_true", help="Attack all possible targets (may take a long time). Implies -q, --stat")
         parser.add_argument("file", help="select pattern file.")
-        # TODO: Add Argument for Benchmark mode? Time execution of attack and give stats for that as well?
         # TODO: Add Parameters to determine dataset sizes (for variation in stat collection)
         # Also change thesis once this is implemented.
 
@@ -296,6 +296,7 @@ def main(argv=None):  # IGNORE:C0111
         var.Config.STAT = args.stat
         var.Config.THREADS = args.threads
         var.Config.MODENUM = args.mode
+        var.Config.DBSPLIT = args.partition
         if args.attack_all:
             var.Config.STAT = True
             var.Config.VERBOSE = False
@@ -303,6 +304,11 @@ def main(argv=None):  # IGNORE:C0111
 
         # Parse input file
         parse.Pattern.parse()
+
+        # Partition database according to value of -p
+        qsize = data.DB.createDatabasePartition(var.Config.DBSPLIT)
+        if qsize != var.Config.DBSPLIT and var.Config.DBSPLIT != -1:
+            sys.stderr.write("[WARN] Main: Client DB contains only %i Queries, should contain %i.\n" % (qsize, var.Config.DBSPLIT))
 
         # Choose targets
         target_list = []
@@ -312,7 +318,7 @@ def main(argv=None):  # IGNORE:C0111
             target_list = data.DB.getAllPossibleTargets()
         else:
             target_list = chooseTargets(args.cnt)
-
+        
         # Get Generators and Attackers
         generatorInstance = getGeneratorFor(args.mode)
         attackerInstance = getAttackerFor(args.mode)
