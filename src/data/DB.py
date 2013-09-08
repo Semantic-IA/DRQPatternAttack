@@ -9,81 +9,91 @@ PATTERNS = {}
 QUERIES = set()
 SIZES = {}
 LENGTH = {}
+# Formats of the dictionaries:
+# PATTERNS[target_domain] = Pattern_as_list
+# QUERIES = set(all_known_queries)
+# SIZES[length] = list_of_domains_with_pattern_length
+# LENGTH[domain] = length_of_domain_pattern
 
-
-def getRandomTarget():
+def getRandomTarget(database=PATTERNS):
     """Choose random Host from the list of possible targets
 
     The List of possible targets is the set of keys of the PATTERNS Dictionary.
 
+    @param database: The database to be used.
     @return: A Hostname for which a pattern is known, as a string
     """
-    return choice(PATTERNS.keys())
+    return choice(database.keys())
 
 
-def getRandomHosts(number):
+def getRandomHosts(number, database=QUERIES):
     """Choose random Hostnames from the set of all known hostnames
 
     @param number: Number of Hostnames to return
+    @param database: The database to be used.
     @return: A list of unique hostnames (as strings)
     """
     if not number > 0:
         Error.printErrorAndExit("getRandomHosts: number must be > 0, was " + str(number))
-    return sample(QUERIES, number)
+    return sample(database, number)
 
 
-def getRandomHostsByPatternLengthB(size, number, blacklist=set([])):
+def getRandomHostsByPatternLengthB(size, number, blacklist=set([]), database=SIZES):
     """Choose random Hostnames from the set of all Hostnames with a pattern with a specified length, excluding a Blacklist.
 
     @param size: The size of the pattern each hostname should have
     @param number: The number of Hostnames that should be returned
     @param blacklist: A set of Domain Names that should not be considered when drawing the random hosts
+    @param database: The database to be used.
     @return: A list of unique Hostnames (as strings)
 
     @requires: number <= len(SIZES[size]-blacklist)
     """
-    if not number <= getNumberOfHostsWithPatternLengthB(size, blacklist):
+    if not number <= getNumberOfHostsWithPatternLengthB(size, blacklist, database):
         Error.printErrorAndExit("getRandomHostsByPatternLength: number must be <= number of available patterns, was " + str(number) + "/" + str(getNumberOfHostsWithPatternLengthB(size, blacklist)))
-    return sample(SIZES[size] - blacklist, number)
+    return sample(database[size] - blacklist, number)
 
-def getRandomHostsByPatternLength(size, number):
+def getRandomHostsByPatternLength(size, number, database=SIZES):
     """Choose random Hostnames from the set of all Hostnames with a pattern with a specified length.
 
     @param size: The size of the pattern each hostname should have
     @param number: The number of Hostnames that should be returned
+    @param database: The database to be used.
     @return: A list of unique Hostnames (as strings)
 
     @requires: number <= len(SIZES[size])
     """
-    if not number <= getNumberOfHostsWithPatternLength(size):
+    if not number <= getNumberOfHostsWithPatternLength(size, database):
         Error.printErrorAndExit("getRandomHostsByPatternLength: number must be <= number of available patterns, was " + str(number) + "/" + str(getNumberOfHostsWithPatternLength(size)))
-    return sample(SIZES[size], number)
+    return sample(database[size], number)
 
 
-def getNumberOfHostsWithPatternLengthB(length, blacklist=set([])):
+def getNumberOfHostsWithPatternLengthB(length, blacklist=set([]), database=SIZES):
     """Get the number of hosts with a particular pattern length, excluding a Blacklist
 
     @param length: Pattern length
     @param blacklist: Set of Hostnames that should not be considered
+    @param database: The database to be used.
     @return: Number of hosts with that pattern length
     """
     if not length > 0:
         Error.printErrorAndExit("getNumberOfHostsWithPatternLengthB: length must be > 0, was " + str(length))
     try:
-        return len(SIZES[length] - blacklist)
+        return len(database[length] - blacklist)
     except KeyError:
         return 0
 
-def getNumberOfHostsWithPatternLength(length):
+def getNumberOfHostsWithPatternLength(length, database=SIZES):
     """Get the number of hosts with a particular pattern length
 
     @param length: Pattern length
+    @param database: The database to be used.
     @return: Number of hosts with that pattern length
     """
     if not length > 0:
         Error.printErrorAndExit("getNumberOfHostsWithPatternLength: length must be > 0, was " + str(length))
     try:
-        return len(SIZES[length])
+        return len(database[length])
     except KeyError:
         return 0
 
@@ -91,7 +101,7 @@ def isValidTarget(host):
     """Check if the provided hostname is a valid target (meaning a pattern exists for it).
 
     @param host: The hostname
-    @return: True or False
+    @return: True (if the target is valid) or False (otherwise)
     """
     try:
         PATTERNS[host]
@@ -122,24 +132,26 @@ def getPatternLengthForHost(host):
     return LENGTH[host]
 
 
-def getAllPossibleTargets():
+def getAllPossibleTargets(database=PATTERNS):
     """Get a list of all targets that have a pattern associated with them
 
+    @param database: The database to be used.
     @return: List of targets
     """
-    return PATTERNS.keys()
+    return database.keys()
 
 
-def getAllTargetsWithLength(length):
+def getAllTargetsWithLength(length, database=SIZES):
     """Get a list of all targets whose patterns have a specific length
 
     @param length: The length
+    @param database: The database to be used.
     @return: A list of possible Targets
     """
     if not length > 0:
         Error.printErrorAndExit("getAllTargetsWithLength: length must be > 0, was " + str(length))
     try:
-        return list(SIZES[length])
+        return list(database[length])
     except KeyError:
         return []
 
