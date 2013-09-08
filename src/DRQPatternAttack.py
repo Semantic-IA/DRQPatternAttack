@@ -284,7 +284,7 @@ def main(argv=None):  # IGNORE:C0111
         group2.add_argument('--target', dest="target", metavar="url", help="Attack this domain", type=str, default="")
         group2.add_argument('--all', dest="attack_all", action="store_true", help="Attack all possible targets (may take a long time). Implies -q, --stat")
         parser.add_argument("file", help="select pattern file.")
-        # TODO: Add -o option to thesis.
+        # TODO: Add -p option to thesis.
 
         # Process arguments
         args = parser.parse_args()
