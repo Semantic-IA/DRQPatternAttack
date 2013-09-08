@@ -17,7 +17,7 @@ DRQPatternAttack is a simulator for the Pattern Attack on DNS Range Queries, as 
 
 import sys
 import os
-from var import Config      # Config Variables
+import var.Config           # Config Variables
 import parse.Pattern        # Parser for pattern file
 import generate.DRQ         # DNS Range Query generator
 import attacker.Pattern     # Attacker
@@ -171,7 +171,7 @@ def validateResults(attackResultDictionary):
             sys.stderr.flush()
             return False
         else:
-            if not Config.QUIET:
+            if not var.Config.QUIET:
                 print "Target:       " + domain
                 print "# possible:   " + str(len(attackResultDictionary[domain]))
                 print "len(pattern): " + str(data.DB.getPatternLengthForHost(domain))
@@ -288,17 +288,17 @@ def main(argv=None):  # IGNORE:C0111
 
         # Process arguments
         args = parser.parse_args()
-        Config.VERBOSE = args.verbose
-        Config.QUIET = args.quiet
-        Config.INFILE = args.file
-        Config.RQSIZE = args.num
-        Config.STAT = args.stat
-        Config.THREADS = args.threads
-        Config.MODENUM = args.mode
+        var.Config.VERBOSE = args.verbose
+        var.Config.QUIET = args.quiet
+        var.Config.INFILE = args.file
+        var.Config.RQSIZE = args.num
+        var.Config.STAT = args.stat
+        var.Config.THREADS = args.threads
+        var.Config.MODENUM = args.mode
         if args.attack_all:
-            Config.STAT = True
-            Config.VERBOSE = False
-            Config.QUIET = True
+            var.Config.STAT = True
+            var.Config.VERBOSE = False
+            var.Config.QUIET = True
 
         # Parse input file
         parse.Pattern.parse()
@@ -316,18 +316,18 @@ def main(argv=None):  # IGNORE:C0111
         generatorInstance = getGeneratorFor(args.mode)
         attackerInstance = getAttackerFor(args.mode)
 
-        if not Config.QUIET:
+        if not var.Config.QUIET:
             print "Beginning Attack..."
 
         # Begin Attack procedure
-        if Config.THREADS > 1:
+        if var.Config.THREADS > 1:
             attackResult = attackParallel(attackerInstance, generatorInstance, target_list)
         else:
             attackResult = attackList(attackerInstance, generatorInstance, target_list)
-        if not Config.STAT:
+        if not var.Config.STAT:
             if not validateResults(attackResult):
                 util.Error.printErrorAndExit("Something went wrong. Exiting!")
-        if Config.STAT or Config.VERBOSE:
+        if var.Config.STAT or var.Config.VERBOSE:
             seperateSum, overallSum = generateStats(attackResult)
             printStats(seperateSum, overallSum)
         return 0
