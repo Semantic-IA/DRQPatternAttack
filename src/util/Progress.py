@@ -14,6 +14,12 @@ from multiprocessing import Lock
 
 
 def getTTYSize():
+    """get TTY Size
+
+    Determine the size of the tty and return it.
+
+    @return: The tty size (number of characters per line)
+    """
     columns = 50
     if os.name == "posix":
         try:    # try to get terminal size using "stty size" (on Linux)
@@ -24,10 +30,21 @@ def getTTYSize():
 
 
 class Bar():
+    """Progress bar implementation
+
+    Implements progress display using a progress bar
+    """
     # TODO: Think about interaction with -q
     state = 0
 
     def __init__(self, eventCount, pip):
+        """Initialize
+
+        Initializes the progress bar.
+
+        @param eventCount: The expected number of tracked events (that will fill the bar to 100%)
+        @param pip: The Character to be used to represent a filled part of the progress bar.
+        """
         ttywidth = getTTYSize()
         self.onePip = float((ttywidth-2) / float(eventCount))
         #self.stepValue = float(eventCount / (ttywidth-2))
@@ -41,6 +58,10 @@ class Bar():
         self.parallelLock = Lock()
 
     def tick(self):
+        """Tick
+        
+        Called on each fired event. Tracks the number of finished events and updates the progress bar.
+        """
         with self.parallelLock:
             cstate = self.state
             nstate = cstate + 1

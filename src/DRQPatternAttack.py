@@ -14,9 +14,6 @@ DRQPatternAttack is a simulator for the Pattern Attack on DNS Range Queries, as 
 @contact:    max [aett] velcommuta.de (PGP Key ID: 3408825E, Fingerprint 84C4 8097 A3AF 7D55 189A  77AC 169F 9624 3408 825E)
 @deffield    updated: Updated
 '''
-# TODO: Überall "Aufrufmuster" => "Anfragemuster"
-# TODO: Resultate des Angreifers direkt validieren, nicht erst am Ende (crash early)
-# TODO: Seed für RNG anzeigen und per param übergeben lassen
 
 import sys
 import os
@@ -28,14 +25,15 @@ import data.DB              # Database
 import util.Progress        # Progress Bar
 import util.Error           # Error logging
 import util.Parallel        # Parallel Processing
+import util.FileManagement  # File Management for stat output
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
 __all__ = []
-__version__ = '0.4.4'
+__version__ = '0.4.5'
 __date__ = '2013-03-15'
-__updated__ = '2013-08-26'
+__updated__ = '2013-09-08'
 
 
 class CLIError(Exception):
@@ -50,8 +48,14 @@ class CLIError(Exception):
     def __unicode__(self):
         return self.msg
 
-
 def getGeneratorFor(genID):
+    """Generator selector
+
+    Resolves a GeneratorID to the matching generator.
+
+    @param genID: The ID of the Generator
+    @return: A Reference to the type of Generator (that can be directly initialized, if needed)
+    """
     generators = {1: generate.DRQ.BRQ().NDBRQ,
                   2: generate.DRQ.BRQ().DFBRQ,
                   3: generate.DRQ.BRQ().FDBRQ,
@@ -62,6 +66,13 @@ def getGeneratorFor(genID):
 
 
 def getAttackerFor(attID):
+    """Attacker selector
+
+    Resolves an AttackerID to the matching attacker.
+
+    @param attID: The ID of the attacker
+    @return: A Reference to the type of Attacker (that can be directly initialized, if needed)
+    """
     attackers = {1: attacker.Pattern.NDBPattern,
                  2: attacker.Pattern.DFBPatternBRQ,
                  3: attacker.Pattern.FDBPattern,
@@ -72,21 +83,54 @@ def getAttackerFor(attID):
 
 
 def chooseTargets(number_of_targets):
+    """Choose a number of random targets
+
+    This function will choose number_of_targets random patterns to be attacked.
+
+    @param number_of_targets: The number of targets to be returned.
+    @return: A list of targets
+    """
+    # TODO: Currently not unique. Change?
     returnValue = []
     for i in range(number_of_targets):
         returnValue.append(data.DB.getRandomTarget())
     return returnValue
 
 
-def attack(attackInstance, inputValue):
-    return attackInstance().attack(inputValue)
-
-
 def generateFor(generatorInstance, domain):
+    """Generate a range Query
+
+    Generates a range Query for the provided domain using the provided, uninitialized generatorInstance
+
+    @param generatorInstance: An uninitialized Generator, as returned by getGeneratorFor(genID)
+    @param domain: The domain the generator should generate a range query for.
+    @return: The result of the generator.
+    """
     return generatorInstance().generateDRQFor(domain)
 
 
+def attack(attackInstance, inputValue):
+    """Start an attack
+
+    Attack a provided inputValue using the provided, uninitialized attackInstance.
+
+    @param attackInstance: An uninitialized attacker, as returned by getAttackerFor(attID).
+    @param inputValue: A valid input value for said attacker.
+    @return: The results of the attack.
+    """
+    return attackInstance().attack(inputValue)
+
+
 def attackList(attackerInstance, generatorInstance, list_of_domains):
+    """Attack a list of targets
+
+    Generate range queries for a list of domains and attack them using the provided attackerInstance.
+
+    @param attackerInstance: An uninitialized Attacker, as returned by getAttackerFor(attID)
+    @param generatorInstance: An uninitialized Generator, as returned by getGeneratorFor(genID)
+    @param list_of_domains: A list of Domains, as returned by chooseTargets(number_of_targets)
+    @return: A Dictionary, mapping domains to the results of the attackers.
+    """
     stat = util.Progress.Bar(len(list_of_domains), "=")
     returnValue = {}
     for domain in list_of_domains:
@@ -96,14 +140,31 @@ def attackList(attackerInstance, generatorInstance, list_of_domains):
 
 
 def attackParallel(attackerInstance, generatorInstance, list_of_domains):
+    """Attack a list of targets using multiple threads
+
+    Parallelize the generation and attacking of a list of domains using multiple threads.
+    Delegates all work to the util.Parallel module.
+
+    @param attackerInstance: An uninitialized Attacker, as returned by getAttackerFor(attID)
+    @param generatorInstance: An uninitialized Generator, as returned by getGeneratorFor(genID)
+    @param list_of_domains: A list of Domains, as returned by chooseTargets(number_of_targets)
+    @return: The result of the util.Parallel.parallelize function (a dictionary, similar to attackList)
+    """
     stat = util.Progress.Bar(len(list_of_domains), "=")
     return util.Parallel.parallelize(attackerInstance, generatorInstance, list_of_domains, stat)
 
 
 def validateResults(attackResultDictionary):
+    """Validate results
+
+    Validated the results of a finished attack, checking if the correct Domain is included in the results.
+
+    @param attackResultDictionary: A result dictionary, as returned by attackList or attackParallel
+    @return True if the correct result was always found, terminates program otherwise.
+    """
     print "Validating Results..."
     i = 0
-    for domain in attackResultDictionary.keys():
+    for domain in attackResultDictionary:
         if domain not in attackResultDictionary[domain]:
             sys.stderr.write("ERROR: " + domain + " not in results\n")
             sys.stderr.write("       Previously checked " + str(i) + " correct results.\n")
@@ -120,38 +181,70 @@ def validateResults(attackResultDictionary):
 
 
 def generateStats(attackResultDictionary):
-    returnValue = {}
-    for domain in attackResultDictionary.keys():
+    # TODO: Rework Docstring, currently horrible wording
+    """Generate stats
+
+    Generate statistics for a provided attackResultDictionary.
+
+    @param attackResultDictionary: A result Dictionary, as returned by attackList or attackParallel
+    @return: Two dictionaries, showing the number of patterns with a specific number of results
+    """
+    seperateSum = {}
+    overallSum = {}
+    for domain in attackResultDictionary:
         pattern_length = data.DB.getPatternLengthForHost(domain)
-        if pattern_length in returnValue:
-            returnValue[pattern_length]["sum"] += len(attackResultDictionary[domain])
-            returnValue[pattern_length]["num"] += 1
-        else:
-            returnValue[pattern_length] = {}
-            returnValue[pattern_length]["sum"] = len(attackResultDictionary[domain])
-            returnValue[pattern_length]["num"] = 1
-    return returnValue
-
-
-def printStats(statDictionary):
-    output1 = "results = ["
-    output2 = "samples = ["
-    for i in range(1, max(statDictionary.keys())+1, 1):
+        ard_len = len(attackResultDictionary[domain])
         try:
-            output1 += (str(statDictionary[i]["sum"] / float(statDictionary[i]["num"])) + " ")
-            output2 += (str(statDictionary[i]["num"]) + " ")
+            seperateSum[pattern_length]
         except KeyError:
-            output1 += "0 "
-            output2 += "0 "
-    output1 += "];"
-    output2 += "];"
-    print output1
-    print output2
+            seperateSum[pattern_length] = {}
+        try:
+            seperateSum[pattern_length][ard_len] += 1
+        except KeyError:
+            seperateSum[pattern_length][ard_len] = 1
+        try:
+            overallSum[ard_len] += 1
+        except KeyError:
+            overallSum[ard_len] = 1
+    return seperateSum, overallSum
+
+
+def printStats(seperateSum, overallSum):
+    """Print stats
+
+    Write the statistics generated by generateStats() to a number of Files, filenames formatted to contain all relevant information
+    (used mode, Block Size, database size, in some cases pattern length of patterns relevant to this file) about the run.
+
+    One file is generated that contains the statistics aggregated over all pattern lengths. Another file is generated for each pattern
+    length that has occured, containing stats of patterns of that length.
+
+    The statistics are in a GnuPlot-compatible format and not cumulative.
+
+    @param seperateSum: A statistics dictionary where seperateSum[pattern_length][num_of_attack_results] contains the number of results
+        of attacks on Patterns of the length pattern_length that returned num_of_attack_results results.
+    @param overallSum: A statistics dictionary where overallSum[num_of_attack_results] contains the number of results of attacks on
+        Patterns of any length that returned num_of_attack_results results.
+    """
+    with util.FileManagement.openStatFile(0) as fo:
+        for i in range(1, max(overallSum)+1, 1):
+            try:
+                fo.write("%i %i\n" % (i, overallSum[i]))
+            except KeyError:
+                fo.write("%i %i\n" % (i, 0))
+    for k in seperateSum:
+        with util.FileManagement.openStatFile(k) as fo:
+            for i in range(1, max(seperateSum[k])+1, 1):
+                try:
+                    fo.write("%i %i\n" % (i, seperateSum[k][i]))
+                except KeyError:
+                    fo.write("%i %i\n" % (i, 0))
 
 
 def main(argv=None):  # IGNORE:C0111
-    '''Command line options.'''
+    """Main function
 
+    Parses CLI options and calls the other functions in order.
+    """
     if argv is None:
         argv = sys.argv
     else:
@@ -190,6 +283,8 @@ def main(argv=None):  # IGNORE:C0111
         group2.add_argument('--all', dest="attack_all", action="store_true", help="Attack all possible targets (may take a long time). Implies -q, --stat")
         parser.add_argument("file", help="select pattern file.")
         # TODO: Add Argument for Benchmark mode? Time execution of attack and give stats for that as well?
+        # TODO: Add Parameters to determine dataset sizes (for variation in stat collection)
+        # Also change thesis once this is implemented.
 
         # Process arguments
         args = parser.parse_args()
@@ -199,6 +294,7 @@ def main(argv=None):  # IGNORE:C0111
         Config.RQSIZE = args.num
         Config.STAT = args.stat
         Config.THREADS = args.threads
+        Config.MODENUM = args.mode
         if args.attack_all:
             Config.STAT = True
             Config.VERBOSE = False
@@ -228,11 +324,12 @@ def main(argv=None):  # IGNORE:C0111
             attackResult = attackParallel(attackerInstance, generatorInstance, target_list)
         else:
             attackResult = attackList(attackerInstance, generatorInstance, target_list)
-        if not validateResults(attackResult):
-            util.Error.printErrorAndExit("Something went wrong. Exiting!")
+        if not Config.STAT:
+            if not validateResults(attackResult):
+                util.Error.printErrorAndExit("Something went wrong. Exiting!")
         if Config.STAT or Config.VERBOSE:
-            statResult = generateStats(attackResult)
-            printStats(statResult)
+            seperateSum, overallSum = generateStats(attackResult)
+            printStats(seperateSum, overallSum)
         return 0
 
     except KeyboardInterrupt:

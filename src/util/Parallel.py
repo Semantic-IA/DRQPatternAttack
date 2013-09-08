@@ -3,8 +3,6 @@ Parallelize a task
 
 @author: Max Maass
 '''
-# TODO: More Docs
-# TODO: Find out why the progress bar seems to bug out on -m 3 -t 4 --all
 import multiprocessing
 import var.Config
 
@@ -39,9 +37,12 @@ def parallelize(attackerFunction, generatorFunction, args, ProgressBarInstance):
 def catchResult(attackerInstance, generatorInstance, args, res_queue, ProgressBarInstance):
     '''Catch the results the called function provides and add them to the result_queue
 
-    @param targetFunction: the function to call
-    @param args: The List of Arguments in the format [["domain_name",[pattern]],["domain_name",[pattern]],...]
+    @param attackerInstance: a attacker instance
+    @param generatorInstance: a generator instance
+    @param args: The List of Arguments that should be interated through
     @param res_queue: The queue in which to save the results (Results are saved as one dictionary and submitted in the end)
+    @param ProgressBarInstance: The instance of the progress bar that should be updated
+    @return: A dictionary mapping attacker arguments to results
     '''
     try:
         resdict = {}
