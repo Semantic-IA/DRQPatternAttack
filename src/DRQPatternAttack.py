@@ -277,7 +277,7 @@ def main(argv=None):  # IGNORE:C0111
         parser.add_argument('--version', action='version', version=program_version_message)
         parser.add_argument('-s', '--size', dest="num", help="Size of the range query [default %(default)s]", default="50", type=int)
         parser.add_argument('-c', '--count', dest="cnt", help="Number of random targets to be tried [default %(default)s]", default="50", type=int)
-        parser.add_argument('-p', '--partition', dest="partition", help="Number of Queries the Client should be allowed to use [default %(default)s for all]", default="-1", type=int)
+        parser.add_argument('-p', '--partition', dest="partition", help="Number of Queries the Client should be allowed to use [default %(default)s for all queries]", default="-1", type=int)
         parser.add_argument('-t', '--threads', dest="threads", help="Number of Threads used for processing [default %(default)s]", default="1", type=int)
         parser.add_argument('--stat', dest="stat", help="Show statistics about the accuracy of the algorithm", action="store_true")
         group2 = parser.add_mutually_exclusive_group()
@@ -318,7 +318,7 @@ def main(argv=None):  # IGNORE:C0111
             target_list = data.DB.getAllPossibleTargets()
         else:
             target_list = chooseTargets(args.cnt)
-        
+
         # Get Generators and Attackers
         generatorInstance = getGeneratorFor(args.mode)
         attackerInstance = getAttackerFor(args.mode)

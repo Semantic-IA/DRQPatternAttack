@@ -41,6 +41,9 @@ def createDatabasePartition(size):
     """
     # TODO: Duplicate handling?
     # TODO: Deterministic oder non-deterministic?
+    if size > len(QUERIES):
+        Error.printErrorAndExit("createDatabasePartition: size must be less than or equal to the number of unique queries (%i)" \
+            % (len(QUERIES)))
     if size == -1:
         PATTERNS_C.update(PATTERNS)
         QUERIES_C.update(QUERIES)
