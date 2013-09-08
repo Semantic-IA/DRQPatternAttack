@@ -114,11 +114,11 @@ class FDBPattern():
         @param blocklist: A list of sets, each set representing a block, the main target in the first block.
         @return: List of possible results
         """
-        # TODO: Das laesst sich sicherlich noch etwas optimieren...
+        # TODO: Optimize this (ideally without using getAllTargetsWithLength)
         res = []
         length = len(blocklist)
-        for key in DB.getAllTargetsWithLength(length):
-            if key in blocklist[0]:
+        for key in blocklist[0]:
+            if DB.isValidTarget(key) and DB.getPatternLengthForHost(key) == length:
                 tmp = blocklist[1:]
                 cnt = {}
                 for i in range(length-1):

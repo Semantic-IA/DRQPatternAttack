@@ -48,6 +48,7 @@ class CLIError(Exception):
     def __unicode__(self):
         return self.msg
 
+
 def getGeneratorFor(genID):
     """Generator selector
 
