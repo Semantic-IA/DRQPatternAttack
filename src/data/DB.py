@@ -3,8 +3,8 @@ Holds the Data parsed from the pattern file for use in other modules
 
 @author: Max Maass
 '''
-from random import choice, sample
-from util import Error
+import random
+import util.Error
 
 PATTERNS = {}       # Database of all patterns
 QUERIES = set()     # Database of all Queries
@@ -14,7 +14,7 @@ PATTERNS_C = {}     # Database of all patterns the client may use
 QUERIES_C = set()   # Database of all queries the client may use
 SIZES_C = {}        # Database mapping lengths to a list of domain patterns with that length that are allowed for the client
 # Formats of the dictionaries:
-# PATTERNS[target_domain] = Pattern_as_list
+# PATTERNS[domain] = Pattern_as_list
 # QUERIES = set(all_known_queries)
 # SIZES[length] = list_of_domains_with_pattern_length
 # LENGTH[domain] = length_of_domain_pattern
@@ -35,22 +35,43 @@ def createDatabasePartition(size):
 
     The goal is to choose a number of patterns whose lengths add up to the size given as a parameter. If the parameter is set to
     -1, the whole dataset is used (PATTERNS_C == PATTERNS and so on).
+    The result of this function is deterministically determined, using the target size as the random number generator seed.
 
     @param size: The number of Queries the client database should contain (or -1, if the database should be the full set).
     @return: The number of queries QUERIES_C actually contains in the end.
     """
-    # TODO: Duplicate handling?
-    # TODO: Deterministic oder non-deterministic?
+    # Currently, this function is DETERMINISTIC and CHECKS FOR DUPLICATES.
     if size > len(QUERIES):
-        Error.printErrorAndExit("createDatabasePartition: size must be less than or equal to the number of unique queries (%i)" \
+        util.Error.printErrorAndExit("createDatabasePartition: size must be less than or equal to the number of unique queries (%i)" \
             % (len(QUERIES)))
-    if size == -1:
+    if size == -1 or size==len(QUERIES):
         PATTERNS_C.update(PATTERNS)
         QUERIES_C.update(QUERIES)
         SIZES_C.update(SIZES)
-        return len(QUERIES_C)
     else:
-        Error.printErrorAndExit("createDatabasePartition: Unimplemented for size=" + str(size))
+        # util.Error.printErrorAndExit("createDatabasePartition: Unimplemented for size=" + str(size))
+        random.seed(size)
+        # Deterministic RNG using the size as seed, so we get the same output every time for the same size.
+        # This is desireable because we want the same database to be compared using different blocks sizes.
+        # The output can only be properly compared if the data base is equal in all runs, hence we use a deterministic RNG here,
+        # it will be re-seeded afterwards to allow (pseudo-)randomness in the rest of the process.
+        domains = PATTERNS.keys()
+        random.shuffle(domains)     # Shuffle the list of domains (deterministically)
+        csize = 0                   # Initialize the variable containing the current size of the database
+        for domain in domains:
+            if csize + LENGTH[domain] <= size:  # The pattern will fit into our requested number, add it to the clients database
+                PATTERNS_C[domain] = PATTERNS[domain]
+                QUERIES_C.update(PATTERNS_C[domain])
+                try:
+                    SIZES_C[LENGTH[domain]].add(domain)
+                except KeyError:
+                    SIZES_C[LENGTH[domain]] = set(domain)
+                csize = len(QUERIES_C)
+            else: # The pattern length of domain is larger than the number of missing patterns, skip this pattern.
+                continue
+        random.seed()
+        # Re-seed the RNG with the current system time or a better source, if one is available (determined by the python interpreter)
+    return len(QUERIES_C)
 
 
 def getRandomTarget():
@@ -60,7 +81,7 @@ def getRandomTarget():
 
     @return: A Hostname for which a pattern is known, as a string
     """
-    return choice(PATTERNS_C.keys())
+    return random.choice(PATTERNS_C.keys())
 
 
 def getRandomHosts(number):
@@ -69,9 +90,13 @@ def getRandomHosts(number):
     @param number: Number of Hostnames to return
     @return: A list of unique hostnames (as strings)
     """
+    # TODO: Handle insufficient number of possible gracefully
     if not number > 0:
-        Error.printErrorAndExit("getRandomHosts: number must be > 0, was " + str(number))
-    return sample(QUERIES_C, number)
+        util.Error.printErrorAndExit("getRandomHosts: number must be > 0, was " + str(number))
+    if not number <= len(QUERIES_C):
+        util.Error.printErrorAndExit("getRandomHosts: number must be smaller than the size of QUERIES_C, was %i (of %i possible)" \
+            % (number, len(QUERIES_C)))
+    return random.sample(QUERIES_C, number)
 
 
 def getRandomHostsByPatternLengthB(size, number, blacklist=set([])):
@@ -84,10 +109,11 @@ def getRandomHostsByPatternLengthB(size, number, blacklist=set([])):
 
     @requires: number <= len(SIZES_C[size]-blacklist)
     """
+    # TODO: Handle insufficient number of possible gracefully
     if not number <= getNumberOfHostsWithPatternLengthB(size, blacklist):
-        Error.printErrorAndExit("getRandomHostsByPatternLength: number must be <= number of available patterns, was " \
+        util.Error.printErrorAndExit("getRandomHostsByPatternLength: number must be <= number of available patterns, was " \
             + str(number) + "/" + str(getNumberOfHostsWithPatternLengthB(size, blacklist)))
-    return sample(SIZES_C[size] - blacklist, number)
+    return random.sample(SIZES_C[size] - blacklist, number)
 
 
 def getRandomHostsByPatternLength(size, number):
@@ -99,10 +125,11 @@ def getRandomHostsByPatternLength(size, number):
 
     @requires: number <= len(SIZES_C[size])
     """
+    # TODO: Handle insufficient number of possible gracefully
     if not number <= getNumberOfHostsWithPatternLength(size):
-        Error.printErrorAndExit("getRandomHostsByPatternLength: number must be <= number of available patterns, was " \
+        util.Error.printErrorAndExit("getRandomHostsByPatternLength: number must be <= number of available patterns, was " \
             + str(number) + "/" + str(getNumberOfHostsWithPatternLength(size)))
-    return sample(SIZES_C[size], number)
+    return random.sample(SIZES_C[size], number)
 
 
 def getNumberOfHostsWithPatternLengthB(length, blacklist=set([])):
@@ -113,7 +140,7 @@ def getNumberOfHostsWithPatternLengthB(length, blacklist=set([])):
     @return: Number of hosts with that pattern length
     """
     if not length > 0:
-        Error.printErrorAndExit("getNumberOfHostsWithPatternLengthB: length must be > 0, was " + str(length))
+        util.Error.printErrorAndExit("getNumberOfHostsWithPatternLengthB: length must be > 0, was " + str(length))
     try:
         return len(SIZES_C[length] - blacklist)
     except KeyError:
@@ -127,7 +154,7 @@ def getNumberOfHostsWithPatternLength(length):
     @return: Number of hosts with that pattern length
     """
     if not length > 0:
-        Error.printErrorAndExit("getNumberOfHostsWithPatternLength: length must be > 0, was " + str(length))
+        util.Error.printErrorAndExit("getNumberOfHostsWithPatternLength: length must be > 0, was " + str(length))
     try:
         return len(SIZES_C[length])
     except KeyError:
@@ -154,7 +181,7 @@ def getPatternForHost(host):
     @return: A reference to the Pattern in the Pattern DB (a set)
     """
     if not isValidTarget(host):
-        Error.printErrorAndExit("getPatternForHost: Invalid host " + str(host))
+        util.Error.printErrorAndExit("getPatternForHost: Invalid host " + str(host))
     return PATTERNS[host].copy()
 
 
@@ -165,7 +192,7 @@ def getPatternLengthForHost(host):
     @return: Length of the Pattern
     """
     if not isValidTarget(host):
-        Error.printErrorAndExit("getPatternLengthForHost: Invalid host " + str(host))
+        util.Error.printErrorAndExit("getPatternLengthForHost: Invalid host " + str(host))
     return LENGTH[host]
 
 
@@ -184,7 +211,7 @@ def getAllTargetsWithLength(length):
     @return: A list of possible Targets
     """
     if not length > 0:
-        Error.printErrorAndExit("getAllTargetsWithLength: length must be > 0, was " + str(length))
+        util.Error.printErrorAndExit("getAllTargetsWithLength: length must be > 0, was " + str(length))
     try:
         return list(SIZES_C[length])
     except KeyError:
@@ -197,7 +224,7 @@ def addTarget(target, pattern):
     @param target: hostname of the target (String)
     @param pattern: query pattern (set)
     """
-    # TODO: Convert asserts into if-blocks w/ Error.printErrorAndExit if something is wrong
+    # TODO: Convert asserts into if-blocks w/ util.Error.printErrorAndExit if something is wrong
     assert target != ""                 # Target not empty
     assert pattern != set([])           # Pattern not empty
     assert not isValidTarget(target)    # Target does not exist yet
