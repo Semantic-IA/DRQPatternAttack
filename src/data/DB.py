@@ -224,10 +224,12 @@ def addTarget(target, pattern):
     @param target: hostname of the target (String)
     @param pattern: query pattern (set)
     """
-    # TODO: Convert asserts into if-blocks w/ util.Error.printErrorAndExit if something is wrong
-    assert target != ""                 # Target not empty
-    assert pattern != set([])           # Pattern not empty
-    assert not isValidTarget(target)    # Target does not exist yet
+    if not target != "":        # Target not empty
+        util.Error.printErrorAndExit("addTarget: target must not be empty")
+    if not pattern != set([]):  # Pattern not empty
+        util.Error.printErrorAndExit("addTarget: Pattern must not be empty")
+    if isValidTarget(target):   # Target does not exist yet
+        util.Error.printErrorAndExit("addTarget: target must not exist yet")
     PATTERNS[target] = pattern
     length = len(pattern)
     try:
