@@ -36,6 +36,7 @@ def createDatabasePartition(size):
     The goal is to choose a number of patterns whose lengths add up to the size given as a parameter. If the parameter is set to
     -1, the whole dataset is used (PATTERNS_C == PATTERNS and so on).
     The result of this function is deterministically determined, using the target size as the random number generator seed.
+    The RNG will be reset to a new, pseudorandom seed before this function terminates.
 
     @param size: The number of Queries the client database should contain (or -1, if the database should be the full set).
     @return: The number of queries QUERIES_C actually contains in the end.
@@ -87,49 +88,41 @@ def getRandomTarget():
 def getRandomHosts(number):
     """Choose random Hostnames from the set of all known hostnames
 
+    If not enough queries are available, all available queries are returned.
+
     @param number: Number of Hostnames to return
     @return: A list of unique hostnames (as strings)
     """
-    # TODO: Handle insufficient number of possible gracefully
     if not number > 0:
         util.Error.printErrorAndExit("getRandomHosts: number must be > 0, was " + str(number))
-    if not number <= len(QUERIES_C):
-        util.Error.printErrorAndExit("getRandomHosts: number must be smaller than the size of QUERIES_C, was %i (of %i possible)" \
-            % (number, len(QUERIES_C)))
-    return random.sample(QUERIES_C, number)
+    return random.sample(QUERIES_C, min(number, len(QUERIES_C)))
 
 
 def getRandomHostsByPatternLengthB(size, number, blacklist=set([])):
     """Choose random Hostnames from the set of all Hostnames with a pattern with a specified length, excluding a Blacklist.
 
+    If not enough hosts are available, the maximum possible number of hosts with the requested pattern
+    length is returned.
+
     @param size: The size of the pattern each hostname should have
     @param number: The number of Hostnames that should be returned
     @param blacklist: A set of Domain Names that should not be considered when drawing the random hosts
     @return: A list of unique Hostnames (as strings)
-
-    @requires: number <= len(SIZES_C[size]-blacklist)
     """
-    # TODO: Handle insufficient number of possible gracefully
-    if not number <= getNumberOfHostsWithPatternLengthB(size, blacklist):
-        util.Error.printErrorAndExit("getRandomHostsByPatternLength: number must be <= number of available patterns, was " \
-            + str(number) + "/" + str(getNumberOfHostsWithPatternLengthB(size, blacklist)))
-    return random.sample(SIZES_C[size] - blacklist, number)
+    return random.sample(SIZES_C[size] - blacklist, min(number, getNumberOfHostsWithPatternLengthB(size, blacklist)))
 
 
 def getRandomHostsByPatternLength(size, number):
     """Choose random Hostnames from the set of all Hostnames with a pattern with a specified length.
 
+    If not enough hosts are available, the maximum possible number of hosts with the requested pattern
+    length is returned.
+
     @param size: The size of the pattern each hostname should have
     @param number: The number of Hostnames that should be returned
     @return: A list of unique Hostnames (as strings)
-
-    @requires: number <= len(SIZES_C[size])
     """
-    # TODO: Handle insufficient number of possible gracefully
-    if not number <= getNumberOfHostsWithPatternLength(size):
-        util.Error.printErrorAndExit("getRandomHostsByPatternLength: number must be <= number of available patterns, was " \
-            + str(number) + "/" + str(getNumberOfHostsWithPatternLength(size)))
-    return random.sample(SIZES_C[size], number)
+    return random.sample(SIZES_C[size], min(number, getNumberOfHostsWithPatternLength(size)))
 
 
 def getNumberOfHostsWithPatternLengthB(length, blacklist=set([])):

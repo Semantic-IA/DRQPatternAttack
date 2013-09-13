@@ -11,6 +11,7 @@ from random import shuffle, sample
 from data import DB
 from var import Config
 from util import Error
+from math import ceil
 # TODO: Refactor into multiple modules?
 
 
@@ -20,6 +21,7 @@ class BasicRangeQuery(object):
     All basic generators inherit from this class and use the generator this class provides.
     They will then proceed to shape their return value according to the generating strategy
     """
+
     def generateBaseDRQ(self, domain):
         """Generator for Basic DNS Range Queries (randomly generated query sets)
 
@@ -31,17 +33,21 @@ class BasicRangeQuery(object):
         """
         if not DB.isValidTarget(domain):
             Error.printErrorAndExit(domain + " is not a valid target")
+        patlen = DB.getPatternLengthForHost(domain)
         block = [set()]
         pattern = DB.getPatternForHost(domain)
         randoms = DB.getRandomHosts((Config.RQSIZE-1)*len(pattern))
+        randlen = len(randoms)
+        partition = int(ceil(randlen / float(patlen)))
         pattern.remove(domain)
         block[0].add(domain)
-        block[0].update(randoms[:Config.RQSIZE-1])
+        block[0].update(randoms[:partition-1])
         i = 1
         for subquery in pattern:
             block.append(set())
             block[i].add(subquery)
-            block[i].update(randoms[i*(Config.RQSIZE-1):(i+1)*(Config.RQSIZE-1)])
+            block[i].update(randoms[i*(partition-1):(i+1)*(partition-1)]) # TODO: Re-check if this makes any sense
+            # I got the feeling that this may be stupid and wasting precious random queries, but I may be wrong.
             i += 1
         return block
 
@@ -52,6 +58,7 @@ class PatternRangeQuery(object):
     All pattern-based generators inherit from this blass and use the generator this class provides.
     They will then proceed to shape their return value according to the generating strategy.
     """
+
     def generateBaseDRQ(self, domain):
         """Generator for Pattern-Based DNS Range Queries (trying to fill the query blocks with patterns)
 
@@ -61,6 +68,7 @@ class PatternRangeQuery(object):
         @param domain: Domain for which a DNS Range Query should be generated
         @return: List of Sets, in order, each set representing a query block
         """
+        # TODO: Update this function to be ready for less than the requested number of patterns.
         if not DB.isValidTarget(domain):
             Error.printErrorAndExit(domain + " is not a valid target")
         pattern_length = len(DB.PATTERNS[domain])
