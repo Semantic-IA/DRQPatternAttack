@@ -167,8 +167,8 @@ def validateResults(attackResultDictionary):
     i = 0
     for domain in attackResultDictionary:
         if domain not in attackResultDictionary[domain]:
-            sys.stderr.write("ERROR: " + domain + " not in results\n")
-            sys.stderr.write("       Previously checked " + str(i) + " correct results.\n")
+            sys.stderr.write("[ERROR] " + domain + " not in results\n")
+            sys.stderr.write("        Previously checked " + str(i) + " correct results.\n")
             sys.stderr.flush()
             return False
         else:

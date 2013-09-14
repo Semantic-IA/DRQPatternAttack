@@ -54,6 +54,7 @@ class DFBPatternBRQ():
         @param rq: The remaining range query, as set
         @return: List of possible results
         """
+        # TODO: FIXME: Not working if client has less than the requested number of dummies.
         fb, rq = block
         res = []
         suspected_n = float(len(fb))

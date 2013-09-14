@@ -12,6 +12,7 @@ from data import DB
 from var import Config
 from util import Error
 from math import ceil
+from itertools import cycle
 # TODO: Refactor into multiple modules?
 
 
@@ -37,18 +38,15 @@ class BasicRangeQuery(object):
         block = [set()]
         pattern = DB.getPatternForHost(domain)
         randoms = DB.getRandomHosts((Config.RQSIZE-1)*len(pattern))
-        randlen = len(randoms)
-        partition = int(ceil(randlen / float(patlen)))
         pattern.remove(domain)
         block[0].add(domain)
-        block[0].update(randoms[:partition-1])
         i = 1
-        for subquery in pattern:
+        for subquery in pattern: # TODO: Get rid of the counter variable
             block.append(set())
             block[i].add(subquery)
-            block[i].update(randoms[i*(partition-1):(i+1)*(partition-1)]) # TODO: Re-check if this makes any sense
-            # I got the feeling that this may be stupid and wasting precious random queries, but I may be wrong.
             i += 1
+        for query, index in zip(randoms, cycle(range(patlen))):
+            block[index].add(query)
         return block
 
 
