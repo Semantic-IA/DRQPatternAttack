@@ -75,7 +75,7 @@ def getAttackerFor(attID):
     @return: A Reference to the type of Attacker (that can be directly initialized, if needed)
     """
     attackers = {1: attacker.Pattern.NDBPattern,
-                 2: attacker.Pattern.DFBPatternBRQ,
+                 2: attacker.Pattern.DFBPatternPRQ, # This used to be *BRQ, but did not work out
                  3: attacker.Pattern.FDBPattern,
                  4: attacker.Pattern.NDBPattern,
                  5: attacker.Pattern.DFBPatternPRQ,
