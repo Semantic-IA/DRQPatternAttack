@@ -66,7 +66,7 @@ def createDatabasePartition(size):
                 try:
                     SIZES_C[LENGTH[domain]].add(domain)
                 except KeyError:
-                    SIZES_C[LENGTH[domain]] = set(domain)
+                    SIZES_C[LENGTH[domain]] = set([domain])
                 csize = len(QUERIES_C)
             else: # The pattern length of domain is larger than the number of missing patterns, skip this pattern.
                 continue

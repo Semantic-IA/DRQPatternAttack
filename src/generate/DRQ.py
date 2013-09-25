@@ -94,7 +94,7 @@ class PatternRangeQuery(object):
                     pad1_len, pad2_len = self.getRandomNumbersWithSum(2, pattern_length)
                 pad1_host = DB.getRandomHostsByPatternLengthB(pad1_len, 1, block[0])[0]
                 pad1_pattern = DB.getPatternForHost(pad1_host).copy()
-                pad1_pattern.remove(pad1_host) # TODO: Does this even make sense? It seems I am doing a lot of shuffling for nothing.
+                pad1_pattern.remove(pad1_host)
                 block[0].add(pad1_host)
                 padding.append([pad1_host])
                 for host in pad1_pattern:
