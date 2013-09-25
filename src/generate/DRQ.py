@@ -11,7 +11,6 @@ from random import shuffle, sample
 from data import DB
 from var import Config
 from util import Error
-from math import ceil
 from itertools import cycle
 # TODO: Refactor into multiple modules?
 
@@ -122,6 +121,7 @@ class PatternRangeQuery(object):
                     block[i].add(pattern[i])
         return block
 
+
     def getRandomNumbersWithSum(self, num_of_rands, sum_of_rands):
         """Return a randomly chosen list of num_of_rands positive integers summing to sum_of_rands.
         Each such list is equally likely to occur.
@@ -169,6 +169,7 @@ class BRQ(Category):
                 query.update(set_of_queries)
             return query
 
+
     class DFBRQ(BasicRangeQuery):
         """Distinguishable first Block Range Query"""
         def generateDRQFor(self, domain):
@@ -190,6 +191,7 @@ class BRQ(Category):
             for set_of_queries in block[1:]:  # Add all elements from the tailing query blocks to big query block
                 tail.update(set_of_queries)
             return (head, tail)
+
 
     class FDBRQ(BasicRangeQuery):
         """Fully distinguishable blocks range query"""
@@ -225,6 +227,7 @@ class PBRQ(Category):
     # TODO: Problem: Weighted Probabilities or completely random selection?
     #     Weighted: More unlikely patterns are easier to guess correctly, and those are usually the relevant patterns
     #     Random: More likely patterns are easier to guess correctly, but those are usually also less interesting
+
     class NDBRQ(PatternRangeQuery):
         """No distinguishable blocks range query"""
         def generateDRQFor(self, domain):
@@ -244,6 +247,7 @@ class PBRQ(Category):
             for set_of_queries in block:
                 query.update(set_of_queries)
             return query
+
 
     class DFBRQ(PatternRangeQuery):
         """Distinguishable first block range query"""
@@ -266,6 +270,7 @@ class PBRQ(Category):
             for set_of_queries in block[1:]:  # Add all elements from the tailing query blocks to big query block
                 tail.update(set_of_queries)
             return (head, tail)
+
 
     class FDBRQ(PatternRangeQuery):
         """Fully distinguishable blocks range query"""
