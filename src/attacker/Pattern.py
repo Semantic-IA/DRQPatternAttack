@@ -50,6 +50,10 @@ class DFBPatternBRQ():
     def attack(self, block):
         """Attack a given Range Query with a distinguishable first block
 
+        This function can only be used under specific circumstances, which is why it is not the default function.
+        To use it, change the Dictionary of the getAttackerFor-function in DRQPatternAttack.py to point to
+        DFBPatternBRQ instead of DFBPatternPRQ, but be aware that it will not always work on small data sets.
+
         @param fb: The first block, as set
         @param rq: The remaining range query, as set
         @return: List of possible results
@@ -114,11 +118,11 @@ class FDBPattern():
         @param blocklist: A list of sets, each set representing a block, the main target in the first block.
         @return: List of possible results
         """
-        # TODO: Das laesst sich sicherlich noch etwas optimieren...
+        # TODO: Optimize this (ideally without using getAllTargetsWithLength)
         res = []
         length = len(blocklist)
-        for key in DB.getAllTargetsWithLength(length):
-            if key in blocklist[0]:
+        for key in blocklist[0]:
+            if DB.isValidTarget(key) and DB.getPatternLengthForHost(key) == length:
                 tmp = blocklist[1:]
                 cnt = {}
                 for i in range(length-1):

@@ -16,5 +16,5 @@ def printErrorAndExit(error_message):
 
     @param error_message: The error message to be printed (string)
     """
-    stderr.write("ERROR: " + error_message + "\n")
+    stderr.write("[ERROR] " + error_message + "\n")
     exit(1)

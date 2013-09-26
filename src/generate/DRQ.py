@@ -11,7 +11,7 @@ from random import shuffle, sample
 from data import DB
 from var import Config
 from util import Error
-# TODO: Refactor into multiple modules?
+from itertools import cycle
 
 
 class BasicRangeQuery(object):
@@ -20,6 +20,7 @@ class BasicRangeQuery(object):
     All basic generators inherit from this class and use the generator this class provides.
     They will then proceed to shape their return value according to the generating strategy
     """
+
     def generateBaseDRQ(self, domain):
         """Generator for Basic DNS Range Queries (randomly generated query sets)
 
@@ -31,27 +32,29 @@ class BasicRangeQuery(object):
         """
         if not DB.isValidTarget(domain):
             Error.printErrorAndExit(domain + " is not a valid target")
+        patlen = DB.getPatternLengthForHost(domain)
         block = [set()]
         pattern = DB.getPatternForHost(domain)
         randoms = DB.getRandomHosts((Config.RQSIZE-1)*len(pattern))
         pattern.remove(domain)
         block[0].add(domain)
-        block[0].update(randoms[:Config.RQSIZE-1])
         i = 1
-        for subquery in pattern:
+        for subquery in pattern: # TODO: Get rid of the counter variable
             block.append(set())
             block[i].add(subquery)
-            block[i].update(randoms[i*(Config.RQSIZE-1):(i+1)*(Config.RQSIZE-1)])
             i += 1
+        for query, index in zip(randoms, cycle(range(patlen))):
+            block[index].add(query)
         return block
 
 
 class PatternRangeQuery(object):
     """Pattern Based Range Query generators
 
-    All pattern-based generators inherit from this blass and use the generator this class provides.
+    All pattern-based generators inherit from this class and use the generator this class provides.
     They will then proceed to shape their return value according to the generating strategy.
     """
+
     def generateBaseDRQ(self, domain):
         """Generator for Pattern-Based DNS Range Queries (trying to fill the query blocks with patterns)
 
@@ -61,6 +64,7 @@ class PatternRangeQuery(object):
         @param domain: Domain for which a DNS Range Query should be generated
         @return: List of Sets, in order, each set representing a query block
         """
+        # TODO: Update this function to be ready for less than the requested number of patterns.
         if not DB.isValidTarget(domain):
             Error.printErrorAndExit(domain + " is not a valid target")
         pattern_length = len(DB.PATTERNS[domain])
@@ -71,49 +75,55 @@ class PatternRangeQuery(object):
             hosts.update(set(DB.getRandomHostsByPatternLengthB(pattern_length, Config.RQSIZE-1, hosts)))
             pattern_copy = {}
             for host in hosts:
-                pattern_copy[host] = DB.getPatternForHost(host).copy()
+                pattern_copy[host] = DB.getPatternForHost(host)
                 pattern_copy[host].remove(host)  # TODO: Ugly code. Any way to make this less horrible?
                 block[0].add(host)
             for i in range(1, pattern_length, 1):
                 block.append(set())
-                for host in pattern_copy.keys():
+                for host in pattern_copy:
                     block[i].add(pattern_copy[host].pop())
-        else:  # TODO: Optimize this shit
+        else:  # TODO: Optimize this
             num_of_needed_patterns = Config.RQSIZE - (num_of_available_patterns+1)
             padding = []
             for i in range(num_of_needed_patterns):
-                pad1_len, pad2_len = self.getRandomNumbersWithSum(2, pattern_length)
-                while ((DB.getNumberOfHostsWithPatternLengthB(pad1_len, block[0]) == 0)
-                        or (DB.getNumberOfHostsWithPatternLength(pad2_len) == 0)):
-                    pad1_len, pad2_len = self.getRandomNumbersWithSum(2, pattern_length)
+                # Find patterns whose lengths sum to pattern_length (if any exist that have not been chosen yet)
+                for pad1_len, pad2_len in zip(range(1, pattern_length/2+1, 1), range(pattern_length-1, pattern_length/2-1, -1)):
+                    if ((DB.getNumberOfHostsWithPatternLengthB(pad1_len, block[0]) > 0) and \
+                        (DB.getNumberOfHostsWithPatternLength(pad2_len) > 0)):
+                        break
+                    elif pad1_len == pattern_length/2: # No fitting patterns have been found, abort
+                        pad1_len = -1
+                if (pad1_len == -1): # Break out of loop as no further patterns can be found.
+                    break
                 pad1_host = DB.getRandomHostsByPatternLengthB(pad1_len, 1, block[0])[0]
-                pad1_pattern = DB.getPatternForHost(pad1_host).copy()
-                pad1_pattern.remove(pad1_host) # TODO: Does this even make sense? It seems I am doing a lot of shuffling for nothing.
+                pad1_pattern = DB.getPatternForHost(pad1_host)
+                pad1_pattern.remove(pad1_host)
                 block[0].add(pad1_host)
                 padding.append([pad1_host])
                 for host in pad1_pattern:
                     padding[i].append(host)
                 pad2_host = DB.getRandomHostsByPatternLength(pad2_len, 1)[0]
-                pad2_pattern = DB.getPatternForHost(pad2_host).copy()
+                pad2_pattern = DB.getPatternForHost(pad2_host)
                 pad2_pattern.remove(pad2_host)
                 padding[i].append(pad2_host)
                 for host in pad2_pattern:
                     padding[i].append(host)
             pattern_copy = {}
             block[0].add(domain)
-            pattern_copy[domain] = DB.getPatternForHost(domain).copy()
+            pattern_copy[domain] = DB.getPatternForHost(domain)
             pattern_copy[domain].remove(domain)
             for element in DB.getRandomHostsByPatternLengthB(pattern_length, num_of_available_patterns, block[0]):
-                pattern_copy[element] = DB.getPatternForHost(element).copy()
+                pattern_copy[element] = DB.getPatternForHost(element)
                 pattern_copy[element].remove(element)
                 block[0].add(element)
             for i in range(1, pattern_length, 1):
                 block.append(set())
-                for host in pattern_copy.keys():
+                for host in pattern_copy:
                     block[i].add(pattern_copy[host].pop())
                 for pattern in padding:
                     block[i].add(pattern[i])
         return block
+
 
     def getRandomNumbersWithSum(self, num_of_rands, sum_of_rands):
         """Return a randomly chosen list of num_of_rands positive integers summing to sum_of_rands.
@@ -162,6 +172,7 @@ class BRQ(Category):
                 query.update(set_of_queries)
             return query
 
+
     class DFBRQ(BasicRangeQuery):
         """Distinguishable first Block Range Query"""
         def generateDRQFor(self, domain):
@@ -183,6 +194,7 @@ class BRQ(Category):
             for set_of_queries in block[1:]:  # Add all elements from the tailing query blocks to big query block
                 tail.update(set_of_queries)
             return (head, tail)
+
 
     class FDBRQ(BasicRangeQuery):
         """Fully distinguishable blocks range query"""
@@ -218,6 +230,7 @@ class PBRQ(Category):
     # TODO: Problem: Weighted Probabilities or completely random selection?
     #     Weighted: More unlikely patterns are easier to guess correctly, and those are usually the relevant patterns
     #     Random: More likely patterns are easier to guess correctly, but those are usually also less interesting
+
     class NDBRQ(PatternRangeQuery):
         """No distinguishable blocks range query"""
         def generateDRQFor(self, domain):
@@ -237,6 +250,7 @@ class PBRQ(Category):
             for set_of_queries in block:
                 query.update(set_of_queries)
             return query
+
 
     class DFBRQ(PatternRangeQuery):
         """Distinguishable first block range query"""
@@ -259,6 +273,7 @@ class PBRQ(Category):
             for set_of_queries in block[1:]:  # Add all elements from the tailing query blocks to big query block
                 tail.update(set_of_queries)
             return (head, tail)
+
 
     class FDBRQ(PatternRangeQuery):
         """Fully distinguishable blocks range query"""

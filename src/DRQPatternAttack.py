@@ -17,7 +17,7 @@ DRQPatternAttack is a simulator for the Pattern Attack on DNS Range Queries, as 
 
 import sys
 import os
-from var import Config      # Config Variables
+import var.Config           # Config Variables
 import parse.Pattern        # Parser for pattern file
 import generate.DRQ         # DNS Range Query generator
 import attacker.Pattern     # Attacker
@@ -31,9 +31,9 @@ from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
 __all__ = []
-__version__ = '0.4.5'
+__version__ = '0.5'
 __date__ = '2013-03-15'
-__updated__ = '2013-09-08'
+__updated__ = '2013-09-26'
 
 
 class CLIError(Exception):
@@ -47,6 +47,7 @@ class CLIError(Exception):
 
     def __unicode__(self):
         return self.msg
+
 
 def getGeneratorFor(genID):
     """Generator selector
@@ -74,7 +75,7 @@ def getAttackerFor(attID):
     @return: A Reference to the type of Attacker (that can be directly initialized, if needed)
     """
     attackers = {1: attacker.Pattern.NDBPattern,
-                 2: attacker.Pattern.DFBPatternBRQ,
+                 2: attacker.Pattern.DFBPatternPRQ, # This used to be *BRQ, but did not work out
                  3: attacker.Pattern.FDBPattern,
                  4: attacker.Pattern.NDBPattern,
                  5: attacker.Pattern.DFBPatternPRQ,
@@ -166,12 +167,12 @@ def validateResults(attackResultDictionary):
     i = 0
     for domain in attackResultDictionary:
         if domain not in attackResultDictionary[domain]:
-            sys.stderr.write("ERROR: " + domain + " not in results\n")
-            sys.stderr.write("       Previously checked " + str(i) + " correct results.\n")
+            sys.stderr.write("[ERROR] " + domain + " not in results\n")
+            sys.stderr.write("        Previously checked " + str(i) + " correct results.\n")
             sys.stderr.flush()
             return False
         else:
-            if not Config.QUIET:
+            if not var.Config.QUIET:
                 print "Target:       " + domain
                 print "# possible:   " + str(len(attackResultDictionary[domain]))
                 print "len(pattern): " + str(data.DB.getPatternLengthForHost(domain))
@@ -276,32 +277,37 @@ def main(argv=None):  # IGNORE:C0111
         parser.add_argument('--version', action='version', version=program_version_message)
         parser.add_argument('-s', '--size', dest="num", help="Size of the range query [default %(default)s]", default="50", type=int)
         parser.add_argument('-c', '--count', dest="cnt", help="Number of random targets to be tried [default %(default)s]", default="50", type=int)
+        parser.add_argument('-p', '--partition', dest="partition", help="Number of Queries the Client should be allowed to use [default %(default)s for all queries]", default="-1", type=int)
         parser.add_argument('-t', '--threads', dest="threads", help="Number of Threads used for processing [default %(default)s]", default="1", type=int)
         parser.add_argument('--stat', dest="stat", help="Show statistics about the accuracy of the algorithm", action="store_true")
         group2 = parser.add_mutually_exclusive_group()
         group2.add_argument('--target', dest="target", metavar="url", help="Attack this domain", type=str, default="")
         group2.add_argument('--all', dest="attack_all", action="store_true", help="Attack all possible targets (may take a long time). Implies -q, --stat")
         parser.add_argument("file", help="select pattern file.")
-        # TODO: Add Argument for Benchmark mode? Time execution of attack and give stats for that as well?
-        # TODO: Add Parameters to determine dataset sizes (for variation in stat collection)
-        # Also change thesis once this is implemented.
+        # TODO: Add -p option to thesis.
 
         # Process arguments
         args = parser.parse_args()
-        Config.VERBOSE = args.verbose
-        Config.QUIET = args.quiet
-        Config.INFILE = args.file
-        Config.RQSIZE = args.num
-        Config.STAT = args.stat
-        Config.THREADS = args.threads
-        Config.MODENUM = args.mode
+        var.Config.VERBOSE = args.verbose
+        var.Config.QUIET = args.quiet
+        var.Config.INFILE = args.file
+        var.Config.RQSIZE = args.num
+        var.Config.STAT = args.stat
+        var.Config.THREADS = args.threads
+        var.Config.MODENUM = args.mode
+        var.Config.DBSPLIT = args.partition
         if args.attack_all:
-            Config.STAT = True
-            Config.VERBOSE = False
-            Config.QUIET = True
+            var.Config.STAT = True
+            var.Config.VERBOSE = False
+            var.Config.QUIET = True
 
         # Parse input file
         parse.Pattern.parse()
+
+        # Partition database according to value of -p
+        qsize = data.DB.createDatabasePartition(var.Config.DBSPLIT)
+        if qsize != var.Config.DBSPLIT and var.Config.DBSPLIT != -1:
+            sys.stderr.write("[WARN] Main: Client DB contains only %i Queries, should contain %i.\n" % (qsize, var.Config.DBSPLIT))
 
         # Choose targets
         target_list = []
@@ -316,18 +322,18 @@ def main(argv=None):  # IGNORE:C0111
         generatorInstance = getGeneratorFor(args.mode)
         attackerInstance = getAttackerFor(args.mode)
 
-        if not Config.QUIET:
+        if not var.Config.QUIET:
             print "Beginning Attack..."
 
         # Begin Attack procedure
-        if Config.THREADS > 1:
+        if var.Config.THREADS > 1:
             attackResult = attackParallel(attackerInstance, generatorInstance, target_list)
         else:
             attackResult = attackList(attackerInstance, generatorInstance, target_list)
-        if not Config.STAT:
+        if not var.Config.STAT:
             if not validateResults(attackResult):
                 util.Error.printErrorAndExit("Something went wrong. Exiting!")
-        if Config.STAT or Config.VERBOSE:
+        if var.Config.STAT or var.Config.VERBOSE:
             seperateSum, overallSum = generateStats(attackResult)
             printStats(seperateSum, overallSum)
         return 0

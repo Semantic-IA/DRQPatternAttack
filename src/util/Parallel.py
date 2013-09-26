@@ -53,6 +53,8 @@ def catchResult(attackerInstance, generatorInstance, args, res_queue, ProgressBa
         return 0
     except KeyboardInterrupt:
         return 1
-    except:
+    except Exception as e:
         print "Parallel: Catch Result: Uncaught Exception"
+        print "Details:", type(e)
+        print e
         return 2
