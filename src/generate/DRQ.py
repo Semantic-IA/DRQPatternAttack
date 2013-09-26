@@ -87,6 +87,7 @@ class PatternRangeQuery(object):
             padding = []
             for i in range(num_of_needed_patterns):
                 # Find patterns whose lengths sum to pattern_length (if any exist that have not been chosen yet)
+                pad1_len = pad2_len = -1
                 for pad1_len, pad2_len in zip(range(1, pattern_length/2+1, 1), range(pattern_length-1, pattern_length/2-1, -1)):
                     if ((DB.getNumberOfHostsWithPatternLengthB(pad1_len, block[0]) > 0) and \
                         (DB.getNumberOfHostsWithPatternLength(pad2_len) > 0)):
