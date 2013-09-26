@@ -12,7 +12,6 @@ from data import DB
 from var import Config
 from util import Error
 from itertools import cycle
-# TODO: Refactor into multiple modules?
 
 
 class BasicRangeQuery(object):
@@ -52,7 +51,7 @@ class BasicRangeQuery(object):
 class PatternRangeQuery(object):
     """Pattern Based Range Query generators
 
-    All pattern-based generators inherit from this blass and use the generator this class provides.
+    All pattern-based generators inherit from this class and use the generator this class provides.
     They will then proceed to shape their return value according to the generating strategy.
     """
 
@@ -83,15 +82,19 @@ class PatternRangeQuery(object):
                 block.append(set())
                 for host in pattern_copy:
                     block[i].add(pattern_copy[host].pop())
-        else:  # TODO: Optimize this shit
+        else:  # TODO: Optimize this
             num_of_needed_patterns = Config.RQSIZE - (num_of_available_patterns+1)
             padding = []
             for i in range(num_of_needed_patterns):
-                pad1_len, pad2_len = self.getRandomNumbersWithSum(2, pattern_length)
-                # TODO: This may livelock on very small data sets. Fix this.
-                while ((DB.getNumberOfHostsWithPatternLengthB(pad1_len, block[0]) == 0)
-                        or (DB.getNumberOfHostsWithPatternLength(pad2_len) == 0)):
-                    pad1_len, pad2_len = self.getRandomNumbersWithSum(2, pattern_length)
+                # Find patterns whose lengths sum to pattern_length (if any exist that have not been chosen yet)
+                for pad1_len, pad2_len in zip(range(1, pattern_length/2+1, 1), range(pattern_length-1, pattern_length/2-1, -1)):
+                    if ((DB.getNumberOfHostsWithPatternLengthB(pad1_len, block[0]) > 0) and \
+                        (DB.getNumberOfHostsWithPatternLength(pad2_len) > 0)):
+                        break
+                    elif pad1_len == pattern_length/2: # No fitting patterns have been found, abort
+                        pad1_len = -1
+                if (pad1_len == -1): # Break out of loop as no further patterns can be found.
+                    break
                 pad1_host = DB.getRandomHostsByPatternLengthB(pad1_len, 1, block[0])[0]
                 pad1_pattern = DB.getPatternForHost(pad1_host)
                 pad1_pattern.remove(pad1_host)

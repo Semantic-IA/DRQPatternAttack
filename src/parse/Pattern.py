@@ -23,7 +23,7 @@ def parse():
         print("Beginning parsing of pattern file...")
     with open(Config.INFILE, 'r') as fobj:
         LC = sum(1 for line in fobj)                    # get line count of file (for progress bar)
-    stat = Progress.Bar(LC, "=")                         # get progress bar instance
+    stat = Progress.Bar(LC, "=")                        # get progress bar instance
     for line in open(Config.INFILE, 'r'):               # Open the file for reading
         line = line.strip()                             # Remove trailing newlines
         target = line[:line.find(":")]                  # Find the target
