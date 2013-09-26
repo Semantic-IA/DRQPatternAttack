@@ -50,11 +50,14 @@ class DFBPatternBRQ():
     def attack(self, block):
         """Attack a given Range Query with a distinguishable first block
 
+        This function can only be used under specific circumstances, which is why it is not the default function.
+        To use it, change the Dictionary of the getAttackerFor-function in DRQPatternAttack.py to point to
+        DFBPatternBRQ instead of DFBPatternPRQ, but be aware that it will not always work on small data sets.
+
         @param fb: The first block, as set
         @param rq: The remaining range query, as set
         @return: List of possible results
         """
-        # TODO: FIXME: Not working if client has less than the requested number of dummies.
         fb, rq = block
         res = []
         suspected_n = float(len(fb))
