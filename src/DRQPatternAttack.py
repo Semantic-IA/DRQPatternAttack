@@ -48,6 +48,7 @@ class CLIError(Exception):
     def __unicode__(self):
         return self.msg
 
+
 def getGeneratorFor(genID):
     """Generator selector
 
@@ -74,7 +75,7 @@ def getAttackerFor(attID):
     @return: A Reference to the type of Attacker (that can be directly initialized, if needed)
     """
     attackers = {1: attacker.Pattern.NDBPattern,
-                 2: attacker.Pattern.DFBPatternBRQ,
+                 2: attacker.Pattern.DFBPatternPRQ, # This used to be *BRQ, but did not work out
                  3: attacker.Pattern.FDBPattern,
                  4: attacker.Pattern.NDBPattern,
                  5: attacker.Pattern.DFBPatternPRQ,
@@ -166,8 +167,8 @@ def validateResults(attackResultDictionary):
     i = 0
     for domain in attackResultDictionary:
         if domain not in attackResultDictionary[domain]:
-            sys.stderr.write("ERROR: " + domain + " not in results\n")
-            sys.stderr.write("       Previously checked " + str(i) + " correct results.\n")
+            sys.stderr.write("[ERROR] " + domain + " not in results\n")
+            sys.stderr.write("        Previously checked " + str(i) + " correct results.\n")
             sys.stderr.flush()
             return False
         else:
@@ -276,15 +277,14 @@ def main(argv=None):  # IGNORE:C0111
         parser.add_argument('--version', action='version', version=program_version_message)
         parser.add_argument('-s', '--size', dest="num", help="Size of the range query [default %(default)s]", default="50", type=int)
         parser.add_argument('-c', '--count', dest="cnt", help="Number of random targets to be tried [default %(default)s]", default="50", type=int)
+        parser.add_argument('-p', '--partition', dest="partition", help="Number of Queries the Client should be allowed to use [default %(default)s for all queries]", default="-1", type=int)
         parser.add_argument('-t', '--threads', dest="threads", help="Number of Threads used for processing [default %(default)s]", default="1", type=int)
         parser.add_argument('--stat', dest="stat", help="Show statistics about the accuracy of the algorithm", action="store_true")
         group2 = parser.add_mutually_exclusive_group()
         group2.add_argument('--target', dest="target", metavar="url", help="Attack this domain", type=str, default="")
         group2.add_argument('--all', dest="attack_all", action="store_true", help="Attack all possible targets (may take a long time). Implies -q, --stat")
         parser.add_argument("file", help="select pattern file.")
-        # TODO: Add Argument for Benchmark mode? Time execution of attack and give stats for that as well?
-        # TODO: Add Parameters to determine dataset sizes (for variation in stat collection)
-        # Also change thesis once this is implemented.
+        # TODO: Add -p option to thesis.
 
         # Process arguments
         args = parser.parse_args()
@@ -295,6 +295,7 @@ def main(argv=None):  # IGNORE:C0111
         var.Config.STAT = args.stat
         var.Config.THREADS = args.threads
         var.Config.MODENUM = args.mode
+        var.Config.DBSPLIT = args.partition
         if args.attack_all:
             var.Config.STAT = True
             var.Config.VERBOSE = False
@@ -302,6 +303,11 @@ def main(argv=None):  # IGNORE:C0111
 
         # Parse input file
         parse.Pattern.parse()
+
+        # Partition database according to value of -p
+        qsize = data.DB.createDatabasePartition(var.Config.DBSPLIT)
+        if qsize != var.Config.DBSPLIT and var.Config.DBSPLIT != -1:
+            sys.stderr.write("[WARN] Main: Client DB contains only %i Queries, should contain %i.\n" % (qsize, var.Config.DBSPLIT))
 
         # Choose targets
         target_list = []
