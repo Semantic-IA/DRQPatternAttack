@@ -31,7 +31,7 @@ from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
 __all__ = []
-__version__ = '0.5'
+__version__ = '0.5.1'
 __date__ = '2013-03-15'
 __updated__ = '2013-09-26'
 
