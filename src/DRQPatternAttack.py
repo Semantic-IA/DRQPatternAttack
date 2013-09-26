@@ -31,9 +31,9 @@ from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
 __all__ = []
-__version__ = '0.4.5'
+__version__ = '0.5'
 __date__ = '2013-03-15'
-__updated__ = '2013-09-08'
+__updated__ = '2013-09-26'
 
 
 class CLIError(Exception):
