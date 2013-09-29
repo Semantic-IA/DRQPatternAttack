@@ -1,0 +1,8 @@
+DRQPatternAttack
+================
+
+Simulator for the semantic intersection attack on the DNS Range Query proposal by Zhao et al in their paper [Analysis of privacy disclosure in DNS Query](http://dl.acm.org/citation.cfm?id=1262690.1262986).
+
+Run DRQPatternAttack.py -h to get a short description on how the program is used. You need a Database of DNS Query Patterns for this to work. This can be achived by using the [DNSPatternFinder-Project](https://github.com/malexmave/DNSPatternFinder).
+
+More information to come later.
