@@ -75,7 +75,7 @@ def getAttackerFor(attID):
     @return: A Reference to the type of Attacker (that can be directly initialized, if needed)
     """
     attackers = {1: attacker.Pattern.NDBPattern,
-                 2: attacker.Pattern.DFBPatternPRQ, # This used to be *BRQ, but did not work out
+                 2: attacker.Pattern.DFBPatternPRQ,
                  3: attacker.Pattern.FDBPattern,
                  4: attacker.Pattern.NDBPattern,
                  5: attacker.Pattern.DFBPatternPRQ,
@@ -91,7 +91,6 @@ def chooseTargets(number_of_targets):
     @param number_of_targets: The number of targets to be returned.
     @return: A list of targets
     """
-    # TODO: Currently not unique. Change?
     returnValue = []
     for i in range(number_of_targets):
         returnValue.append(data.DB.getRandomTarget())
@@ -132,11 +131,11 @@ def attackList(attackerInstance, generatorInstance, list_of_domains):
     @param list_of_domains: A list of Domains, as returned by chooseTargets(number_of_targets)
     @return: A Dictionary, mapping domains to the results of the attackers.
     """
-    stat = util.Progress.Bar(len(list_of_domains), "=")
+    stat = util.Progress.Bar(len(list_of_domains), "=") # Get a progress bar instance to use
     returnValue = {}
-    for domain in list_of_domains:
+    for domain in list_of_domains: # Iterate through all targets, generating Range queries and attacking them
         returnValue[domain] = attack(attackerInstance, generateFor(generatorInstance, domain))
-        stat.tick()
+        stat.tick() # Update stats
     return returnValue
 
 

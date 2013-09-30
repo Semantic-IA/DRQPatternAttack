@@ -121,8 +121,9 @@ class FDBPattern():
         # TODO: Optimize this (ideally without using getAllTargetsWithLength)
         res = []
         length = len(blocklist)
-        for key in blocklist[0]:
-            if DB.isValidTarget(key) and DB.getPatternLengthForHost(key) == length:
+        for key in blocklist[0]: # Iterate through all candidates for the main target (as it must be in the first block)
+            if DB.isValidTarget(key) and DB.getPatternLengthForHost(key) == length: # If it is the beginning of a pattern of the correct length...
+                # The following is a method of determining if every block contains exactly one element of the pattern of the current candidate.
                 tmp = blocklist[1:]
                 cnt = {}
                 for i in range(length-1):
