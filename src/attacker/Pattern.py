@@ -8,9 +8,6 @@ The attack functions take different inputs, but will always return a list of pos
 
 @author: Max Maass
 '''
-# TODO: Idea: Restructure this into classes to mirror the classes of the generators.
-# TODO: Check: Matching naming conventions for generators and attackers
-# TODO: Add comments to explain what is happening
 from data import DB
 import math
 
@@ -31,9 +28,10 @@ class NDBPattern():
         @return: list of possible results
         """
         res = []
-        for element in rq:
-            if DB.isValidTarget(element):
-                inter = rq & DB.getPatternForHost(element)
+        for element in rq: # Iterate through all elements (queries) of the given range query
+            if DB.isValidTarget(element): # If the current element is the beginning of a pattern...
+                # This checks if the pattern of the current element is a subset of the range query
+                inter = rq & DB.getPatternForHost(element) 
                 if len(inter) == DB.getPatternLengthForHost(element):
                     res.append(element)
         return res
@@ -71,9 +69,10 @@ class DFBPatternBRQ():
         # only leads to x-1. Those cases would be few and far between, considering the chances of actually getting so many duplicates,
         # but nevertheless, they should be dealt with.
         pattern_length_min = math.floor(rqlen / (suspected_n+1))
-        for key in fb:
+        for key in fb: # Iterate through all elements of the first block
             if DB.isValidTarget(key) and (pattern_length_min <= DB.getPatternLengthForHost(key) <= pattern_length_max):
-                if DB.getPatternForHost(key) <= rq:
+                # if the current element is a beginning of a pattern with the correct length...
+                if DB.getPatternForHost(key) <= rq: # Check if the pattern is a subset of the remaining range query.
                     res.append(key)
         return res
 
@@ -96,9 +95,9 @@ class DFBPatternPRQ():
         fb, rq = block
         res = []
         rq.update(fb)
-        for key in fb:
-            if DB.isValidTarget(key):
-                if DB.getPatternForHost(key) <= rq:
+        for key in fb: # Iterate through all queries in the first block
+            if DB.isValidTarget(key): # If the current query is a valid beginning of a pattern...
+                if DB.getPatternForHost(key) <= rq: # Check if the pattern is a subset of the second block.
                     res.append(key)
         return res
 
@@ -118,7 +117,6 @@ class FDBPattern():
         @param blocklist: A list of sets, each set representing a block, the main target in the first block.
         @return: List of possible results
         """
-        # TODO: Optimize this (ideally without using getAllTargetsWithLength)
         res = []
         length = len(blocklist)
         for key in blocklist[0]: # Iterate through all candidates for the main target (as it must be in the first block)
