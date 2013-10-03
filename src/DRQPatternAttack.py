@@ -181,7 +181,6 @@ def validateResults(attackResultDictionary):
 
 
 def generateStats(attackResultDictionary):
-    # TODO: Rework Docstring, currently horrible wording
     """Generate stats
 
     Generate statistics for a provided attackResultDictionary.
@@ -267,23 +266,21 @@ def main(argv=None):  # IGNORE:C0111
 
     try:
         # Setup argument parser
-        # TODO: Sort these arguments in a way that makes sense (Order is preserved in final programs --help)
         parser = ArgumentParser(description=program_license, formatter_class=RawDescriptionHelpFormatter, epilog=program_epilogue)
-        group1 = parser.add_mutually_exclusive_group()
-        group1.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="enable verbose output (show more information).")
-        group1.add_argument("-q", "--quiet", dest="quiet", action="store_true", help="enable quiet mode.")
         parser.add_argument("-m", '--mode', dest="mode", help="Enable a specific mode of operation. See below for possible options. [default %(default)s]", default="1", choices=[1, 2, 3, 4, 5, 6], type=int)
-        parser.add_argument('--version', action='version', version=program_version_message)
         parser.add_argument('-s', '--size', dest="num", help="Size of the range query [default %(default)s]", default="50", type=int)
         parser.add_argument('-c', '--count', dest="cnt", help="Number of random targets to be tried [default %(default)s]", default="50", type=int)
         parser.add_argument('-p', '--partition', dest="partition", help="Number of Queries the Client should be allowed to use [default %(default)s for all queries]", default="-1", type=int)
         parser.add_argument('-t', '--threads', dest="threads", help="Number of Threads used for processing [default %(default)s]", default="1", type=int)
-        parser.add_argument('--stat', dest="stat", help="Show statistics about the accuracy of the algorithm", action="store_true")
         group2 = parser.add_mutually_exclusive_group()
         group2.add_argument('--target', dest="target", metavar="url", help="Attack this domain", type=str, default="")
         group2.add_argument('--all', dest="attack_all", action="store_true", help="Attack all possible targets (may take a long time). Implies -q, --stat")
+        parser.add_argument('--stat', dest="stat", help="Show statistics about the accuracy of the algorithm", action="store_true")
         parser.add_argument("file", help="select pattern file.")
-        # TODO: Add -p option to thesis.
+        group1 = parser.add_mutually_exclusive_group()
+        group1.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="enable verbose output (show more information).")
+        group1.add_argument("-q", "--quiet", dest="quiet", action="store_true", help="enable quiet mode.")
+        parser.add_argument('--version', action='version', version=program_version_message)
 
         # Process arguments
         args = parser.parse_args()
