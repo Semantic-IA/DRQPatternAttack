@@ -1,15 +1,15 @@
 #!/usr/bin/python2.7
 # encoding: utf-8
 '''
-DRQPatternAttack -- Implementing the Pattern Attack on DNS Range Queries
+DRQPatternAttack -- Implementing the semantic intersection Attack on DNS Range Queries
 
-DRQPatternAttack is a simulator for the Pattern Attack on DNS Range Queries, as described in my Bachelor Thesis.
+DRQPatternAttack is a simulator for the semantic intersection Attack on DNS Range Queries, as described in my Bachelor Thesis.
 
 @author:     Max Maass
 
 @copyright:  2013 Max Maass
 
-@license:    To be determined
+@license:    BSD 2-clause license
 
 @contact:    max [aett] velcommuta.de (PGP Key ID: 3408825E, Fingerprint 84C4 8097 A3AF 7D55 189A  77AC 169F 9624 3408 825E)
 @deffield    updated: Updated
@@ -31,9 +31,9 @@ from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
 __all__ = []
-__version__ = '0.5.1'
+__version__ = '0.6'
 __date__ = '2013-03-15'
-__updated__ = '2013-09-26'
+__updated__ = '2013-10-05'
 
 
 class CLIError(Exception):
