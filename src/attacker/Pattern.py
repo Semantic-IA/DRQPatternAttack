@@ -62,8 +62,7 @@ class DFBPatternBRQ():
         rq.update(fb)
         rqlen = len(rq)
         pattern_length_max = math.ceil(rqlen / suspected_n)
-        pattern_length_max += math.ceil(pattern_length_max / suspected_n)
-        pattern_length_max += math.ceil(pattern_length_max / suspected_n)
+        pattern_length_max += 2 * math.ceil(pattern_length_max / suspected_n)
         # Increase maximum pattern length, because duplicates could lead to a miscalculation of up to floor(real_pattern_length/real_N).
         # We are using ceil() to avoid border cases where the real M would lead to x in that calculation, while our detected M
         # only leads to x-1. Those cases would be few and far between, considering the chances of actually getting so many duplicates,
