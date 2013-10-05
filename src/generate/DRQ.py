@@ -7,7 +7,7 @@ results in different formats.
 
 @author: Max Maass
 '''
-from random import shuffle, sample
+from random import shuffle
 from data import DB
 from var import Config
 from util import Error
@@ -39,7 +39,7 @@ class BasicRangeQuery(object):
         pattern.remove(domain)
         block[0].add(domain)
         i = 1
-        for subquery in pattern: # TODO: Get rid of the counter variable
+        for subquery in pattern:
             block.append(set())
             block[i].add(subquery)
             i += 1
@@ -64,7 +64,6 @@ class PatternRangeQuery(object):
         @param domain: Domain for which a DNS Range Query should be generated
         @return: List of Sets, in order, each set representing a query block
         """
-        # TODO: Update this function to be ready for less than the requested number of patterns.
         if not DB.isValidTarget(domain):
             Error.printErrorAndExit(domain + " is not a valid target")
         pattern_length = len(DB.PATTERNS[domain])
@@ -76,13 +75,13 @@ class PatternRangeQuery(object):
             pattern_copy = {}
             for host in hosts:
                 pattern_copy[host] = DB.getPatternForHost(host)
-                pattern_copy[host].remove(host)  # TODO: Ugly code. Any way to make this less horrible?
+                pattern_copy[host].remove(host) 
                 block[0].add(host)
             for i in range(1, pattern_length, 1):
                 block.append(set())
                 for host in pattern_copy:
                     block[i].add(pattern_copy[host].pop())
-        else:  # TODO: Optimize this
+        else: 
             num_of_needed_patterns = Config.RQSIZE - (num_of_available_patterns+1)
             padding = []
             for i in range(num_of_needed_patterns):
@@ -124,21 +123,6 @@ class PatternRangeQuery(object):
                 for pattern in padding:
                     block[i].add(pattern[i])
         return block
-
-
-    def getRandomNumbersWithSum(self, num_of_rands, sum_of_rands):
-        """Return a randomly chosen list of num_of_rands positive integers summing to sum_of_rands.
-        Each such list is equally likely to occur.
-
-        Source: http://stackoverflow.com/a/3590105/1232833
-
-        @param num_of_rands: The Number of random numbers that should be returned
-        @param sum_of_rands: The sum the random numbers should add up to
-        @return: A list of random numbers with the sum of sum_of_rands
-        """
-        assert num_of_rands > 0 and sum_of_rands > num_of_rands
-        dividers = sorted(sample(xrange(1, sum_of_rands), num_of_rands - 1))
-        return [a - b for a, b in zip(dividers + [sum_of_rands], [0] + dividers)]
 
 
 class Category(object):
@@ -223,15 +207,6 @@ class BRQ(Category):
 
 class PBRQ(Category):
     """Pattern-based range query"""
-    # TODO: Idea: Pad using multiple patterns that sum into the correct amount (Problem: Choice betw. alternatives)
-    #     If used: For written part, consider timing problems using this method
-    # TODO: Idea: Add more blocks that are not relevant to the "real" query.
-    #     Meaning: Pattern length 6 -> 8 Blocks, add another Pattern with a length of 2 to continue orig. Pattern.
-    #     Return Blocks in steps of N Blocks for obfuscation.
-    # TODO: Problem: Weighted Probabilities or completely random selection?
-    #     Weighted: More unlikely patterns are easier to guess correctly, and those are usually the relevant patterns
-    #     Random: More likely patterns are easier to guess correctly, but those are usually also less interesting
-
     class NDBRQ(PatternRangeQuery):
         """No distinguishable blocks range query"""
         def generateDRQFor(self, domain):
