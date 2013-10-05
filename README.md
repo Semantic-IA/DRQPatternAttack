@@ -10,40 +10,40 @@ More details on the program will be added closer to public release.
 
 # Usage
 
-usage: DRQPatternAttack.py [-h] [-m {1,2,3,4,5,6}] [-s NUM] [-c CNT]
-                           [-p PARTITION] [-t THREADS] [--target url | --all]
-                           [--stat] [-v | -q] [--version]
-                           file
+    usage: DRQPatternAttack.py [-h] [-m {1,2,3,4,5,6}] [-s NUM] [-c CNT]
+                               [-p PARTITION] [-t THREADS] [--target url | --all]
+                               [--stat] [-v | -q] [--version]
+                               file
 
-positional arguments:
-  file                  select pattern file.
+    positional arguments:
+      file                  select pattern file.
 
-optional arguments:
-  -h, --help            show this help message and exit
-  -m {1,2,3,4,5,6}, --mode {1,2,3,4,5,6}
-                        Enable a specific mode of operation. See below for
-                        possible options. [default 1]
-  -s NUM, --size NUM    Size of the range query [default 50]
-  -c CNT, --count CNT   Number of random targets to be tried [default 50]
-  -p PARTITION, --partition PARTITION
-                        Number of Queries the Client should be allowed to use
-                        [default -1 for all queries]
-  -t THREADS, --threads THREADS
-                        Number of Threads used for processing [default 1]
-  --target url          Attack this domain
-  --all                 Attack all possible targets (may take a long time).
-                        Implies -q, --stat
-  --stat                Show statistics about the accuracy of the algorithm
-  -v, --verbose         enable verbose output (show more information).
-  -q, --quiet           enable quiet mode.
-  --version             show program's version number and exit
+    optional arguments:
+      -h, --help            show this help message and exit
+      -m {1,2,3,4,5,6}, --mode {1,2,3,4,5,6}
+                            Enable a specific mode of operation. See below for
+                            possible options. [default 1]
+      -s NUM, --size NUM    Size of the range query [default 50]
+      -c CNT, --count CNT   Number of random targets to be tried [default 50]
+      -p PARTITION, --partition PARTITION
+                            Number of Queries the Client should be allowed to use
+                            [default -1 for all queries]
+      -t THREADS, --threads THREADS
+                            Number of Threads used for processing [default 1]
+      --target url          Attack this domain
+      --all                 Attack all possible targets (may take a long time).
+                            Implies -q, --stat
+      --stat                Show statistics about the accuracy of the algorithm
+      -v, --verbose         enable verbose output (show more information).
+      -q, --quiet           enable quiet mode.
+      --version             show program's version number and exit
 
-Modes of Operation:
-  1) No distinguishable Blocks 		- Random Generation
-  2) Distinguishable first Block 	- Random Generation
-  3) Fully distinguishable Blocks 	- Random Generation
-  4) No distinguishable Blocks 		- Pattern-based generation
-  5) Distinguishable first Block 	- Pattern-based generation
-  6) Fully distinguishable Blocks 	- Pattern-based generation
+    Modes of Operation:
+      1) No distinguishable Blocks 		- Random Generation
+      2) Distinguishable first Block 	- Random Generation
+      3) Fully distinguishable Blocks 	- Random Generation
+      4) No distinguishable Blocks 		- Pattern-based generation
+      5) Distinguishable first Block 	- Pattern-based generation
+      6) Fully distinguishable Blocks 	- Pattern-based generation
 
-  Please consult the thesis to find more information about the modes
+      Please consult the thesis to find more information about the modes
