@@ -1,8 +1,6 @@
 '''
 Module to display error messages.
 
-Created on May 18, 2013
-
 @author: Max Maass
 '''
 
@@ -16,5 +14,5 @@ def printErrorAndExit(error_message):
 
     @param error_message: The error message to be printed (string)
     """
-    stderr.write("[ERROR] " + error_message + "\n")
+    stderr.write("[ERROR] " + error_message + "\n") # Write error msg to STDERR
     exit(1)

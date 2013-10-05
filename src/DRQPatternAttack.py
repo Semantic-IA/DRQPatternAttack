@@ -1,15 +1,15 @@
 #!/usr/bin/python2.7
 # encoding: utf-8
 '''
-DRQPatternAttack -- Implementing the Pattern Attack on DNS Range Queries
+DRQPatternAttack -- Implementing the semantic intersection Attack on DNS Range Queries
 
-DRQPatternAttack is a simulator for the Pattern Attack on DNS Range Queries, as described in my Bachelor Thesis.
+DRQPatternAttack is a simulator for the semantic intersection Attack on DNS Range Queries, as described in my Bachelor Thesis.
 
 @author:     Max Maass
 
 @copyright:  2013 Max Maass
 
-@license:    To be determined
+@license:    BSD 2-clause license
 
 @contact:    max [aett] velcommuta.de (PGP Key ID: 3408825E, Fingerprint 84C4 8097 A3AF 7D55 189A  77AC 169F 9624 3408 825E)
 @deffield    updated: Updated
@@ -31,9 +31,9 @@ from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
 __all__ = []
-__version__ = '0.5.1'
+__version__ = '0.6'
 __date__ = '2013-03-15'
-__updated__ = '2013-09-26'
+__updated__ = '2013-10-05'
 
 
 class CLIError(Exception):
@@ -75,7 +75,7 @@ def getAttackerFor(attID):
     @return: A Reference to the type of Attacker (that can be directly initialized, if needed)
     """
     attackers = {1: attacker.Pattern.NDBPattern,
-                 2: attacker.Pattern.DFBPatternPRQ, # This used to be *BRQ, but did not work out
+                 2: attacker.Pattern.DFBPatternPRQ,
                  3: attacker.Pattern.FDBPattern,
                  4: attacker.Pattern.NDBPattern,
                  5: attacker.Pattern.DFBPatternPRQ,
@@ -91,7 +91,6 @@ def chooseTargets(number_of_targets):
     @param number_of_targets: The number of targets to be returned.
     @return: A list of targets
     """
-    # TODO: Currently not unique. Change?
     returnValue = []
     for i in range(number_of_targets):
         returnValue.append(data.DB.getRandomTarget())
@@ -132,11 +131,11 @@ def attackList(attackerInstance, generatorInstance, list_of_domains):
     @param list_of_domains: A list of Domains, as returned by chooseTargets(number_of_targets)
     @return: A Dictionary, mapping domains to the results of the attackers.
     """
-    stat = util.Progress.Bar(len(list_of_domains), "=")
+    stat = util.Progress.Bar(len(list_of_domains), "=") # Get a progress bar instance to use
     returnValue = {}
-    for domain in list_of_domains:
+    for domain in list_of_domains: # Iterate through all targets, generating Range queries and attacking them
         returnValue[domain] = attack(attackerInstance, generateFor(generatorInstance, domain))
-        stat.tick()
+        stat.tick() # Update stats
     return returnValue
 
 
@@ -182,7 +181,6 @@ def validateResults(attackResultDictionary):
 
 
 def generateStats(attackResultDictionary):
-    # TODO: Rework Docstring, currently horrible wording
     """Generate stats
 
     Generate statistics for a provided attackResultDictionary.
@@ -268,23 +266,21 @@ def main(argv=None):  # IGNORE:C0111
 
     try:
         # Setup argument parser
-        # TODO: Sort these arguments in a way that makes sense (Order is preserved in final programs --help)
         parser = ArgumentParser(description=program_license, formatter_class=RawDescriptionHelpFormatter, epilog=program_epilogue)
-        group1 = parser.add_mutually_exclusive_group()
-        group1.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="enable verbose output (show more information).")
-        group1.add_argument("-q", "--quiet", dest="quiet", action="store_true", help="enable quiet mode.")
         parser.add_argument("-m", '--mode', dest="mode", help="Enable a specific mode of operation. See below for possible options. [default %(default)s]", default="1", choices=[1, 2, 3, 4, 5, 6], type=int)
-        parser.add_argument('--version', action='version', version=program_version_message)
         parser.add_argument('-s', '--size', dest="num", help="Size of the range query [default %(default)s]", default="50", type=int)
         parser.add_argument('-c', '--count', dest="cnt", help="Number of random targets to be tried [default %(default)s]", default="50", type=int)
         parser.add_argument('-p', '--partition', dest="partition", help="Number of Queries the Client should be allowed to use [default %(default)s for all queries]", default="-1", type=int)
         parser.add_argument('-t', '--threads', dest="threads", help="Number of Threads used for processing [default %(default)s]", default="1", type=int)
-        parser.add_argument('--stat', dest="stat", help="Show statistics about the accuracy of the algorithm", action="store_true")
         group2 = parser.add_mutually_exclusive_group()
         group2.add_argument('--target', dest="target", metavar="url", help="Attack this domain", type=str, default="")
         group2.add_argument('--all', dest="attack_all", action="store_true", help="Attack all possible targets (may take a long time). Implies -q, --stat")
+        parser.add_argument('--stat', dest="stat", help="Show statistics about the accuracy of the algorithm", action="store_true")
         parser.add_argument("file", help="select pattern file.")
-        # TODO: Add -p option to thesis.
+        group1 = parser.add_mutually_exclusive_group()
+        group1.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="enable verbose output (show more information).")
+        group1.add_argument("-q", "--quiet", dest="quiet", action="store_true", help="enable quiet mode.")
+        parser.add_argument('--version', action='version', version=program_version_message)
 
         # Process arguments
         args = parser.parse_args()
