@@ -5,6 +5,10 @@ Generates Range Queries for a given Domain and the corresponding pattern.
 Divided into multiple classes. Each class provides a generateDRQFor(domain)-Function, but they will return their
 results in different formats.
 
+Technically, the BasicRangeQuery and PatternRangeQuery provide a generator that returns a generated Range Query
+in fully distinguishable blocks format. The generators that are called from the outside use those generators
+and only reformat the output to suit their modes.
+
 @author: Max Maass
 '''
 from random import shuffle
@@ -34,16 +38,17 @@ class BasicRangeQuery(object):
             Error.printErrorAndExit(domain + " is not a valid target")
         patlen = DB.getPatternLengthForHost(domain)
         block = [set()]
-        pattern = DB.getPatternForHost(domain)
-        randoms = DB.getRandomHosts((Config.RQSIZE-1)*len(pattern))
+        pattern = DB.getPatternForHost(domain) # Get the actual pattern of the target
+        randoms = DB.getRandomHosts((Config.RQSIZE-1)*len(pattern)) # Get random hosts (dummies)
         pattern.remove(domain)
         block[0].add(domain)
         i = 1
-        for subquery in pattern:
+        for subquery in pattern: # Create the blocks that will hold dummies and actual queries
             block.append(set())
-            block[i].add(subquery)
+            block[i].add(subquery) # Add the actual query to its respective block
             i += 1
-        for query, index in zip(randoms, cycle(range(patlen))):
+        for query, index in zip(randoms, cycle(range(patlen))): 
+            # distribute the randomly chosen dummy queries as evenly as possible across the blocks
             block[index].add(query)
         return block
 
@@ -88,13 +93,16 @@ class PatternRangeQuery(object):
                 # Find patterns whose lengths sum to pattern_length (if any exist that have not been chosen yet)
                 pad1_len = pad2_len = -1
                 for pad1_len, pad2_len in zip(range(1, pattern_length/2+1, 1), range(pattern_length-1, pattern_length/2-1, -1)):
+                    # This is a construct that generates numbers that sum to pattern_length. It is used instead of truly random
+                    # numbers because it will not get stuck when no more patterns are available.
                     if ((DB.getNumberOfHostsWithPatternLengthB(pad1_len, block[0]) > 0) and \
                         (DB.getNumberOfHostsWithPatternLength(pad2_len) > 0)):
                         break
-                    elif pad1_len == pattern_length/2: # No fitting patterns have been found, abort
+                    elif pad1_len == pattern_length/2: # No patterns of the correct length have been found, abort
                         pad1_len = -1
                 if (pad1_len == -1): # Break out of loop as no further patterns can be found.
                     break
+                # The following few lines get the dummy patterns from the database and saves them to the list of dummy-patterns
                 pad1_host = DB.getRandomHostsByPatternLengthB(pad1_len, 1, block[0])[0]
                 pad1_pattern = DB.getPatternForHost(pad1_host)
                 pad1_pattern.remove(pad1_host)
@@ -108,15 +116,18 @@ class PatternRangeQuery(object):
                 padding[i].append(pad2_host)
                 for host in pad2_pattern:
                     padding[i].append(host)
+            # We now have as many dummy patterns as we will get. Start distributing them.
             pattern_copy = {}
             block[0].add(domain)
             pattern_copy[domain] = DB.getPatternForHost(domain)
             pattern_copy[domain].remove(domain)
             for element in DB.getRandomHostsByPatternLengthB(pattern_length, num_of_available_patterns, block[0]):
+                # Get all patterns with the correct length and add them to the range query
                 pattern_copy[element] = DB.getPatternForHost(element)
                 pattern_copy[element].remove(element)
                 block[0].add(element)
             for i in range(1, pattern_length, 1):
+                # Distribute the remaining patterns (those whose lengths sum to the correct length)
                 block.append(set())
                 for host in pattern_copy:
                     block[i].add(pattern_copy[host].pop())
@@ -153,7 +164,7 @@ class BRQ(Category):
             """
             block = BasicRangeQuery.generateBaseDRQ(self, domain)
             query = set()
-            for set_of_queries in block:
+            for set_of_queries in block: # Put all Queries from all Blocks into one big block
                 query.update(set_of_queries)
             return query
 
@@ -200,7 +211,7 @@ class BRQ(Category):
             block = BasicRangeQuery.generateBaseDRQ(self, domain)
             head = [block[0]]
             tail = block[1:]
-            shuffle(tail)
+            shuffle(tail) # Shuffle the list to remove information about the order of the queries
             block = head + tail
             return block
 
@@ -223,7 +234,7 @@ class PBRQ(Category):
             """
             block = PatternRangeQuery.generateBaseDRQ(self, domain)
             query = set()
-            for set_of_queries in block:
+            for set_of_queries in block: # Put the contents of all blocks into one big block
                 query.update(set_of_queries)
             return query
 
@@ -269,6 +280,6 @@ class PBRQ(Category):
             block = PatternRangeQuery.generateBaseDRQ(self, domain)
             head = [block[0]]
             tail = block[1:]
-            shuffle(tail)
+            shuffle(tail) # Shuffle the list to remove information about the order of the queries.
             block = head + tail
             return block
