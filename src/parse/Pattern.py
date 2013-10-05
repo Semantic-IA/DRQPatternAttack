@@ -18,7 +18,6 @@ def parse():
     No parameters or return values, all info is read from the config and written to the database.
     @bug: Leading www. in domain name may cause issues if the www. is omitted in the pattern
     """
-    # FIXME: Add verification of file format, plus exception in case of violation
     if not Config.QUIET:
         print("Beginning parsing of pattern file...")
     with open(Config.INFILE, 'r') as fobj:
@@ -38,7 +37,7 @@ def parse():
             if element.startswith("www."):
                 element = element[4:]                   # Remove leading www., if any
             pattern.add(element)                        # Add to current pattern
-        DB.addTarget(target, pattern)
+        DB.addTarget(target, pattern)                   # Actually add the information to the DB
         stat.tick()                                     # notify progress bar
     if not Config.QUIET:
         print "Done"

@@ -15,23 +15,26 @@ def parallelize(attackerFunction, generatorFunction, args, ProgressBarInstance):
     @param count: The number of Subprocesses to be spawned
     @return: The merged results of the function
     '''
-    res_queue = multiprocessing.Queue()
-    res_dict = {}
-    processes = []
+    res_queue = multiprocessing.Queue() # Create a threadsafe queue for the results
+    res_dict = {}   # Create a result dictionary
+    processes = []  # Prepare the process list
     part = int(len(args)/var.Config.THREADS)
-    for i in range(var.Config.THREADS):
-        if i != var.Config.THREADS-1:
-            arg = args[i*part:(i+1)*part]
+    # Determine the split of the input values to distribute them across all processes
+    for i in range(var.Config.THREADS): # Now we will reate var.Config.THREADS processes
+        if i != var.Config.THREADS-1: # If this is not the last process to be created...
+            arg = args[i*part:(i+1)*part] # Start it with this part of the input data
         else:
-            arg = args[i*part:]
-        p = multiprocessing.Process(target=catchResult, args=(attackerFunction(), generatorFunction(), arg, res_queue, ProgressBarInstance))
-        processes.append(p)
-        p.start()
+            arg = args[i*part:] # Else give it the remaining input values to make sure none are left out
+        p = multiprocessing.Process(target=catchResult, args=(attackerFunction(), \
+            generatorFunction(), arg, res_queue, ProgressBarInstance))
+        # Prepare a process that will run the catchResult-function with the provided arguments.
+        processes.append(p) # Add it to the process list for later process management...
+        p.start() # ...and run it.
     for i in processes:
-        res_dict.update(res_queue.get())
+        res_dict.update(res_queue.get()) # Get all results from all processes and save them
     for p in processes:
-        p.join()
-    return res_dict
+        p.join() # Wait for all processes to exit
+    return res_dict # Return the result dictionary
 
 
 def catchResult(attackerInstance, generatorInstance, args, res_queue, ProgressBarInstance):
@@ -48,12 +51,13 @@ def catchResult(attackerInstance, generatorInstance, args, res_queue, ProgressBa
         resdict = {}
         for arg in args:
             resdict[arg] = attackerInstance.attack(generatorInstance.generateDRQFor(arg))
-            ProgressBarInstance.tick()
-        res_queue.put(resdict)
+            # Run an attack on an input value
+            ProgressBarInstance.tick() # Update progress bar
+        res_queue.put(resdict) # return result dictionary
         return 0
-    except KeyboardInterrupt:
+    except KeyboardInterrupt: # Exit on Ctrl+C
         return 1
-    except Exception as e:
+    except Exception as e: # Catch and log exceptions
         print "Parallel: Catch Result: Uncaught Exception"
         print "Details:", type(e)
         print e

@@ -34,7 +34,6 @@ class Bar():
 
     Implements progress display using a progress bar
     """
-    # TODO: Think about interaction with -q
     state = 0
 
     def __init__(self, eventCount, pip):
@@ -47,7 +46,6 @@ class Bar():
         """
         ttywidth = getTTYSize()
         self.onePip = float((ttywidth-2) / float(eventCount))
-        #self.stepValue = float(eventCount / (ttywidth-2))
         self.state = 0.0
         self.pip = pip
         self.eventCount = eventCount
@@ -62,6 +60,7 @@ class Bar():
         
         Called on each fired event. Tracks the number of finished events and updates the progress bar.
         """
+        # The following will update the progress bar.
         with self.parallelLock:
             cstate = self.state
             nstate = cstate + 1
